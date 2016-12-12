@@ -5,7 +5,7 @@ env:
   - TOXENV=py34
   - TOXENV=py35
 
-install: pip install nose
+install: pip install requests nose-parameterized
 
 script: nosetests
 
