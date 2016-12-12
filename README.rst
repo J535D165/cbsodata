@@ -1,6 +1,9 @@
 Statistics Netherlands opendata API client for Python
 =====================================================
 
+.. image:: https://travis-ci.org/J535D165/cbsodata.svg?branch=master
+    :target: https://travis-ci.org/J535D165/cbsodata
+
 Retrieve data from the `open data interface of Statistics
 Netherlands <http://www.cbs.nl/nl-NL/menu/cijfers/statline/open-data/default.htm>`__
 with *Python*.
