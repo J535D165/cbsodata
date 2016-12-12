@@ -12,7 +12,7 @@ FORMAT = "json"
 
 
 def _get_table_url(table_id):
-    """ Give the table id and return the url to the data """
+    """ Create a table url for the given table indentifier."""
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm
     return "%(baseurl)s/%(bulk)s/%(table_id)s/" % \
@@ -20,6 +20,7 @@ def _get_table_url(table_id):
 
 
 def _download_metadata(table_id, metadata_name, params={}):
+    """ Download metadata. """
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm/UntypedDataSet?$format=json
     url = _get_table_url(table_id) + metadata_name
@@ -46,7 +47,7 @@ def _download_metadata(table_id, metadata_name, params={}):
 
 
 def _save_data(data, dir, metadata_name):
-    """ Save the data """
+    """ Save the data. """
 
     print ("Write metadata '%s'" % metadata_name)
 
@@ -60,6 +61,7 @@ def _save_data(data, dir, metadata_name):
 
 
 def _select(subset=None):
+    """ Select columns. """
 
     params = {}
 
@@ -73,7 +75,20 @@ def _select(subset=None):
 
 
 def download_data(table_id, dir=None, typed=False):
-    """ Download and save all the data in the table """
+    """
+    Download the CBS data and metadata.
+
+    :param table_id: The indentifier of the table.
+    :param dir: Folder to save data to. If not given, data is not stored
+            on disk.
+    :param typed: Return a typed data table. Default False.
+    :type table_id: str
+    :type dir: str
+    :type typed: bool
+
+    :returns: The requested data.
+    :rtype: list
+    """
 
     # Start downloading data
     print("Retrieving data from table '%s'" % table_id)
@@ -106,6 +121,16 @@ def download_data(table_id, dir=None, typed=False):
 
 
 def get_table_list(subset=None):
+    """
+    Get a list of available tables.
+
+    :param subset: List of column label to return
+    :type subset: list
+
+    :returns: list of table infomation (dict type)
+    :rtype: list
+
+    """
 
     url = "%(baseurl)s/%(catalog)s/Tables?$format=json" % \
         {"baseurl": CBSOPENDATA, "catalog": CATALOG}
@@ -120,7 +145,13 @@ def get_table_list(subset=None):
 
 def get_info(table_id):
     """
-    Get information about the table.
+    Get information about a table.
+
+    :param table_id: The indentifier of the table.
+    :type table_id: str
+
+    :returns: Table information
+    :rtype: dict
     """
 
     info_list = _download_metadata(table_id, "TableInfos")
@@ -132,13 +163,36 @@ def get_info(table_id):
 
 
 def get_meta(table_id, name):
-    """ Get the metadata by name """
+    """
+    Get the metadata of a table.
+
+    :param table_id: The indentifier of the table.
+    :param name: The name of the metadata (for example DataProperties).
+    :type table_id: str
+    :type name: str
+
+    :returns: list with metadata (dict type)
+    :rtype: list
+    """
 
     return _download_metadata(table_id, name)
 
 
 def get_data(table_id, dir=None, typed=False):
-    """ Get the CBS datatable """
+    """
+    Get the CBS table.
+
+    :param table_id: The indentifier of the table.
+    :param dir: Folder to save data to. If not given, data is not stored
+            on disk.
+    :param typed: Return a typed data table. Default False.
+    :type table_id: str
+    :type dir: str
+    :type typed: bool
+
+    :returns: The requested data.
+    :rtype: list
+    """
 
     metadata = download_data(table_id, dir=dir, typed=typed)
 
