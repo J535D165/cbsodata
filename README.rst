@@ -1,7 +1,12 @@
 Statistics Netherlands opendata API client for Python
 =====================================================
 
-.. image:: https://travis-ci.org/J535D165/cbsodata.svg?branch=master
+|pypi| |travis|
+
+.. |pypi| image:: https://badge.fury.io/py/cbsodata.svg
+    :target: https://badge.fury.io/py/cbsodata
+
+.. |travis| image:: https://travis-ci.org/J535D165/cbsodata.svg?branch=master
     :target: https://travis-ci.org/J535D165/cbsodata
 
 Retrieve data from the `open data interface of Statistics
