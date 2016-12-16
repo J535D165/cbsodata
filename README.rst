@@ -39,8 +39,8 @@ Tables
 ``cbsodata.get_table_list(subset=None)``
 
 Statistics Netherlands (CBS) has a large amount of public available
-datatables (more than 4000 at the moment of writing). Each table is
-idenitified with a unique identifier (``Identifier``).
+data tables (more than 4000 at the moment of writing). Each table is
+identified  by a unique identifier (``Identifier``).
 
 .. code:: python
 
@@ -91,8 +91,8 @@ Data
 
 ``cbsodata.get_data(table_id, dir=None, typed=False)``
 
-The function you are looking for!! The data is returned as a list of
-dicts.
+The function you are looking for!! The function ``get_data`` returns a list of
+dicts with the table data.
 
 .. code:: python
 
@@ -124,14 +124,14 @@ dicts.
 Pandas users
 ~~~~~~~~~~~~
 
-The result can be converted in a pandas DataFrame.
+Convert the result into a pandas DataFrame.
 
 .. code:: python
 
     >>> data = pandas.DataFrame(cbsodata.get_data('82070ENG'))
     >>> data.head()
 
-The list of tables can be converted into a pandas DataFrame easily.
+The list of tables can be turned into a pandas DataFrame as well.
 
 .. code:: python
 
