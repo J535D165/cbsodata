@@ -144,12 +144,12 @@ def get_table_list(select=None, filters=None):
     Get a list of available tables.
 
     :param select: List of column label to return
-    :param filter: Return only rows that agree on the filter. An
-            example is ((LandVanUiteindelijkeZeggenschapUCI eq '11111')
+    :param filters: Return only rows that agree on the filter. An
+            example is `((LandVanUiteindelijkeZeggenschapUCI eq '11111')
             or (LandVanUiteindelijkeZeggenschapUCI eq '22222')) and
-            (Bedrijfsgrootte eq '10000') and (substringof('JJ',Perioden))
+            (Bedrijfsgrootte eq '10000') and (substringof('JJ',Perioden))`
     :type select: list
-    :type filter: str
+    :type filters: str
 
     :returns: list of table infomation (dict type)
     :rtype: list
