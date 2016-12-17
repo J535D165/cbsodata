@@ -65,7 +65,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['cbsodata'],
+    # packages=['cbsodata'],
 
     install_requires=['requests'],
 

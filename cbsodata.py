@@ -19,13 +19,19 @@ def _get_table_url(table_id):
         {"baseurl": CBSOPENDATA, "bulk": BULK, "table_id": table_id}
 
 
-def _download_metadata(table_id, metadata_name, params={}):
+def _download_metadata(table_id, metadata_name, select=None, filters=None):
     """ Download metadata. """
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm/UntypedDataSet?$format=json
     url = _get_table_url(table_id) + metadata_name
 
+    params = {}
     params["$format"] = FORMAT
+
+    if select:
+        params['$select'] = _select(select=select)
+    if filters:
+        params['$filter'] = _filters(filters=filters)
 
     data = []
 
@@ -60,21 +66,30 @@ def _save_data(data, dir, metadata_name):
         json.dump(data, output_file, indent=2)
 
 
-def _select(subset=None):
-    """ Select columns. """
+def _filters(query=None):
+    """ Filter query """
 
-    params = {}
-
-    if subset:
-        if isinstance(subset, list):
-            subset = ','.join(subset)
-
-        params['$select'] = subset
-
-    return params
+    return query
 
 
-def download_data(table_id, dir=None, typed=False):
+def _select(select=None):
+    """
+    Select columns.
+
+    :param select: The columns to return.
+    :type select: str, list
+
+    :returns: URL parameter
+    :rtype: str
+    """
+
+    if isinstance(select, list):
+        select = ','.join(select)
+
+    return select
+
+
+def download_data(table_id, dir=None, typed=False, **kwargs):
     """
     Download the CBS data and metadata.
 
@@ -108,7 +123,11 @@ def download_data(table_id, dir=None, typed=False):
     for table_name in metadata_table_names:
 
         # download table
-        metadata = _download_metadata(table_id, table_name)
+        if table_name in ["TypedDataSet", "UntypedDataSet"]:
+            metadata = _download_metadata(table_id, table_name, **kwargs)
+        else:
+            metadata = _download_metadata(table_id, table_name)
+
         data[table_name] = metadata
 
         # save the data
@@ -120,22 +139,35 @@ def download_data(table_id, dir=None, typed=False):
     return data
 
 
-def get_table_list(subset=None):
+def get_table_list(select=None, filters=None):
     """
     Get a list of available tables.
 
-    :param subset: List of column label to return
-    :type subset: list
+    :param select: List of column label to return
+    :param filter: Return only rows that agree on the filter. An
+            example is ((LandVanUiteindelijkeZeggenschapUCI eq '11111')
+            or (LandVanUiteindelijkeZeggenschapUCI eq '22222')) and
+            (Bedrijfsgrootte eq '10000') and (substringof('JJ',Perioden))
+    :type select: list
+    :type filter: str
 
     :returns: list of table infomation (dict type)
     :rtype: list
 
     """
 
+    # http://opendata.cbs.nl/ODataCatalog/Tables?$format=json&$filter=ShortTit
+    # le%20eq%20%27Zeggenschap%20bedrijven;%20banen,%20grootte%27
+
+    # http://opendata.cbs.nl/ODataCatalog/Tables?$format=json
     url = "%(baseurl)s/%(catalog)s/Tables?$format=json" % \
         {"baseurl": CBSOPENDATA, "catalog": CATALOG}
 
-    params = _select(subset=subset)
+    params = {}
+    if select:
+        params['$select'] = _select(select=select)
+    if filters:
+        params['$filter'] = _filters(filters=filters)
 
     r = requests.get(url, params=params)
     res = r.json()
@@ -178,7 +210,7 @@ def get_meta(table_id, name):
     return _download_metadata(table_id, name)
 
 
-def get_data(table_id, dir=None, typed=False):
+def get_data(table_id, dir=None, typed=False, **kwargs):
     """
     Get the CBS table.
 
@@ -194,7 +226,7 @@ def get_data(table_id, dir=None, typed=False):
     :rtype: list
     """
 
-    metadata = download_data(table_id, dir=dir, typed=typed)
+    metadata = download_data(table_id, dir=dir, typed=typed, **kwargs)
 
     if "TypedDataSet" in metadata.keys():
         data = metadata["TypedDataSet"]
