@@ -1,5 +1,5 @@
-CBSOData Reference
-==================
+Reference
+=========
 
 .. automodule:: cbsodata
    :members:

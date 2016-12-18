@@ -89,17 +89,21 @@ def _select(select=None):
     return select
 
 
-def download_data(table_id, dir=None, typed=False, **kwargs):
+def download_data(table_id, dir=None, typed=False, select=None, filters=None):
     """
     Download the CBS data and metadata.
 
     :param table_id: The indentifier of the table.
-    :param dir: Folder to save data to. If not given, data is not stored
-            on disk.
+    :param dir: Folder to save data to. If not given, data is not stored on
+            disk.
     :param typed: Return a typed data table. Default False.
+    :param select: Column label or list of column labels to return.
+    :param filters: Return only rows that agree on the filter.
     :type table_id: str
     :type dir: str
     :type typed: bool
+    :type select: list
+    :type filters: str
 
     :returns: The requested data.
     :rtype: list
@@ -124,7 +128,8 @@ def download_data(table_id, dir=None, typed=False, **kwargs):
 
         # download table
         if table_name in ["TypedDataSet", "UntypedDataSet"]:
-            metadata = _download_metadata(table_id, table_name, **kwargs)
+            metadata = _download_metadata(table_id, table_name,
+                                          select=select, filters=filters)
         else:
             metadata = _download_metadata(table_id, table_name)
 
@@ -143,15 +148,12 @@ def get_table_list(select=None, filters=None):
     """
     Get a list of available tables.
 
-    :param select: List of column label to return
-    :param filters: Return only rows that agree on the filter. An
-            example is `((LandVanUiteindelijkeZeggenschapUCI eq '11111')
-            or (LandVanUiteindelijkeZeggenschapUCI eq '22222')) and
-            (Bedrijfsgrootte eq '10000') and (substringof('JJ',Perioden))`
+    :param select: Column label or list of column labels to return.
+    :param filters: Return only rows that agree on the filter.
     :type select: list
     :type filters: str
 
-    :returns: list of table infomation (dict type)
+    :returns: Information about the available tables (list of dictionaries)
     :rtype: list
 
     """
@@ -210,23 +212,28 @@ def get_meta(table_id, name):
     return _download_metadata(table_id, name)
 
 
-def get_data(table_id, dir=None, typed=False, **kwargs):
+def get_data(table_id, dir=None, typed=False, select=None, filters=None):
     """
-    Get the CBS table.
+    Get the CBS data table.
 
     :param table_id: The indentifier of the table.
     :param dir: Folder to save data to. If not given, data is not stored
             on disk.
     :param typed: Return a typed data table. Default False.
+    :param select: Column label or list of column labels to return.
+    :param filters: Return only rows that agree on the filter.
     :type table_id: str
     :type dir: str
     :type typed: bool
+    :type select: list
+    :type filters: str
 
     :returns: The requested data.
     :rtype: list
     """
 
-    metadata = download_data(table_id, dir=dir, typed=typed, **kwargs)
+    metadata = download_data(table_id, dir=dir, typed=typed,
+                             select=select, filters=filters)
 
     if "TypedDataSet" in metadata.keys():
         data = metadata["TypedDataSet"]
