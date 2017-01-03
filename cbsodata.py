@@ -40,7 +40,7 @@ FORMAT = "json"
 
 
 def _get_table_url(table_id):
-    """ Create a table url for the given table indentifier."""
+    """Create a table url for the given table indentifier."""
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm
     return "%(baseurl)s/%(bulk)s/%(table_id)s/" % \
@@ -48,7 +48,7 @@ def _get_table_url(table_id):
 
 
 def _download_metadata(table_id, metadata_name, select=None, filters=None):
-    """ Download metadata. """
+    """Download metadata."""
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm/UntypedDataSet?$format=json
     url = _get_table_url(table_id) + metadata_name
@@ -57,7 +57,7 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None):
     params["$format"] = FORMAT
 
     if select:
-        params['$select'] = _select(select=select)
+        params['$select'] = _select(select)
     if filters:
         params['$filter'] = _filters(filters)
 
@@ -81,7 +81,7 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None):
 
 
 def _save_data(data, dir, metadata_name):
-    """ Save the data. """
+    """Save the data."""
 
     print ("Write metadata '%s'" % metadata_name)
 
@@ -95,14 +95,13 @@ def _save_data(data, dir, metadata_name):
 
 
 def _filters(query):
-    """ Filter query """
+    """Filter rows with a CBS-style query."""
 
     return query
 
 
-def _select(select=None):
-    """
-    Select columns.
+def _select(select):
+    """Select columns.
 
     :param select: The columns to return.
     :type select: str, list
@@ -174,7 +173,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None):
 
 def get_table_list(select=None, filters=None):
     """
-    Get a list of available tables.
+    Get a list with the available tables.
 
     :param select: Column label or list of column labels to return.
     :param filters: Return only rows that agree on the filter.
@@ -195,7 +194,7 @@ def get_table_list(select=None, filters=None):
 
     params = {}
     if select:
-        params['$select'] = _select(select=select)
+        params['$select'] = _select(select)
     if filters:
         params['$filter'] = _filters(filters)
 
