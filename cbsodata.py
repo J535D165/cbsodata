@@ -273,8 +273,8 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None):
         "DataProperties", "CategoryGroups"
     ]
 
-    # norm_cols = [meta for x in df.columns.tolist() if x in meta.keys()]
-    norm_cols = set(metadata.keys()) - set(exclude)
+    norm_cols = list(set(metadata.keys()) - set(exclude))
+
     for norm_col in norm_cols:
         metadata[norm_col] = {r['Key']: r for r in metadata[norm_col]}
 
@@ -282,7 +282,10 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None):
 
         for norm_col in norm_cols:
 
-            v = data[i][norm_col]
-            data[i][norm_col] = metadata[norm_col][v]['Title']
+            try:
+                v = data[i][norm_col]
+                data[i][norm_col] = metadata[norm_col][v]['Title']
+            except KeyError:
+                pass
 
     return data
