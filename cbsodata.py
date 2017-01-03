@@ -29,7 +29,7 @@ import json
 import requests
 
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 CBSOPENDATA = "http://opendata.cbs.nl"
 API = "ODataApi/odata"
