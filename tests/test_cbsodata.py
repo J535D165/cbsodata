@@ -90,3 +90,53 @@ class TestCBSOData(unittest.TestCase):
         print (filt)
 
         cbsodata.get_data('82070ENG', filters=filt)
+
+    def test_select(self):
+
+        default_sel_filt = cbsodata.get_info('82070ENG')['DefaultSelection']
+        filters_and_selections = default_sel_filt.split("&")
+
+        for fs in filters_and_selections:
+            if fs.startswith('$select='):
+                select = fs[8:]
+
+        cbsodata.get_data('82070ENG', select=select)
+
+    def test_select_list(self):
+
+        default_sel_filt = cbsodata.get_info('82070ENG')['DefaultSelection']
+        filters_and_selections = default_sel_filt.split("&")
+
+        for fs in filters_and_selections:
+            if fs.startswith('$select='):
+                select = fs[8:]
+
+        cbsodata.get_data('82070ENG', select=select.split(', '))
+
+    def test_select_subset(self):
+
+        default_sel_filt = cbsodata.get_info('82070ENG')['DefaultSelection']
+        filters_and_selections = default_sel_filt.split("&")
+
+        for fs in filters_and_selections:
+            if fs.startswith('$select='):
+                select = fs[8:]
+
+        select_list = select.split(', ')
+        cbsodata.get_data('82070ENG', select=select_list[0:2])
+
+    def test_select_n_cols(self):
+
+        default_sel_filt = cbsodata.get_info('82070ENG')['DefaultSelection']
+        filters_and_selections = default_sel_filt.split("&")
+
+        for fs in filters_and_selections:
+            if fs.startswith('$select='):
+                select = fs[8:]
+
+        select_list = select.split(', ')
+        data = cbsodata.get_data('82070ENG', select=select_list[0:2])
+
+        self.assertEqual(len(data[0].keys()), 2)
+        self.assertEqual(len(data[5].keys()), 2)
+        self.assertEqual(len(data[10].keys()), 2)
