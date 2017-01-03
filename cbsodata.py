@@ -59,7 +59,7 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None):
     if select:
         params['$select'] = _select(select=select)
     if filters:
-        params['$filter'] = _filters(filters=filters)
+        params['$filter'] = _filters(filters)
 
     data = []
 
@@ -94,7 +94,7 @@ def _save_data(data, dir, metadata_name):
         json.dump(data, output_file, indent=2)
 
 
-def _filters(query=None):
+def _filters(query):
     """ Filter query """
 
     return query
@@ -197,7 +197,7 @@ def get_table_list(select=None, filters=None):
     if select:
         params['$select'] = _select(select=select)
     if filters:
-        params['$filter'] = _filters(filters=filters)
+        params['$filter'] = _filters(filters)
 
     r = requests.get(url, params=params)
     res = r.json()
