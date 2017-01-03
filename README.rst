@@ -36,8 +36,6 @@ Load the package with
 Tables
 ~~~~~~
 
-``cbsodata.get_table_list(subset=None)``
-
 Statistics Netherlands (CBS) has a large amount of public available
 data tables (more than 4000 at the moment of writing). Each table is
 identified  by a unique identifier (``Identifier``).
@@ -74,8 +72,6 @@ identified  by a unique identifier (``Identifier``).
 Info
 ~~~~
 
-``cbsodata.get_info(table_id)``
-
 Get information about a table with the ``get_info`` function.
 
 .. code:: python
@@ -88,8 +84,6 @@ Get information about a table with the ``get_info`` function.
 
 Data
 ~~~~
-
-``cbsodata.get_data(table_id, dir=None, typed=False)``
 
 The function you are looking for!! The function ``get_data`` returns a list of
 dicts with the table data.
@@ -120,6 +114,14 @@ dicts with the table data.
       'PersonalCharacteristics': 'Total personal characteristics'},
      # ...
     ]
+
+The keyword argument ``dir`` can be used to download the data directly to your
+file system.
+
+.. code:: python
+
+    >>> data = cbsodata.get_data('82070ENG', dir="dir_to_save_data")
+
 
 Pandas users
 ~~~~~~~~~~~~
