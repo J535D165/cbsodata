@@ -11,8 +11,14 @@ Statistics Netherlands opendata API client for Python
 
 Retrieve data from the `open data interface of Statistics Netherlands
 <http://www.cbs.nl/nl-NL/menu/cijfers/statline/open-data/default.htm>`__
-(Centraal Bureau voor de Statistiek) with *Python*. The documentation is found
-at this page and on `readthedocs.io <http://cbsodata.readthedocs.io/>`__.
+(Centraal Bureau voor de Statistiek) with *Python*. The data is identical in
+content to the tables which can be retrieved and downloaded from `StatLine
+<http://statline.cbs.nl/>`__. CBS datasets are accessed via the `CBS open data
+portal <https://opendata.cbs.nl/statline/portal.html>`__.
+
+The documentation of this
+package is found at this page and on `readthedocs.io
+<http://cbsodata.readthedocs.io/>`__.
 
 R user? Use `cbsodataR <https://cran.r-project.org/web/packages/cbsodataR/index.html>`__. 
 
