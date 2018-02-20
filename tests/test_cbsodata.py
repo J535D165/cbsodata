@@ -89,13 +89,9 @@ class TestCBSOData(unittest.TestCase):
         default_sel_filt = cbsodata.get_info('82070ENG')['DefaultSelection']
         filters_and_selections = default_sel_filt.split("&")
 
-        print (filters_and_selections[0])
-
         for fs in filters_and_selections:
             if fs.startswith('$filter='):
                 filt = fs[8:]
-
-        print (filt)
 
         cbsodata.get_data('82070ENG', filters=filt)
 

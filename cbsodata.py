@@ -95,8 +95,6 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None):
 def _save_data(data, dir, metadata_name):
     """Save the data."""
 
-    print ("Write metadata '%s'" % metadata_name)
-
     if not os.path.exists(dir):
         os.makedirs(dir)
 
@@ -155,9 +153,6 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None):
     :rtype: list
     """
 
-    # Start downloading data
-    print("Retrieving data from table '%s'" % table_id)
-
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm?$format=json
     metadata_tables = _download_metadata(table_id, "")
 
@@ -184,8 +179,6 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None):
         # save the data
         if dir:
             _save_data(metadata, dir, table_name)
-
-    print("Done!")
 
     return data
 
