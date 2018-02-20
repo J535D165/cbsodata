@@ -31,20 +31,29 @@ import requests
 
 __version__ = "0.1.3"
 
-CBSOPENDATA = "http://opendata.cbs.nl"
+CBSOPENDATA = "opendata.cbs.nl"
 API = "ODataApi/odata"
 BULK = "ODataFeed/odata"
 
 CATALOG = "ODataCatalog"
 FORMAT = "json"
 
+# User options
+options = {
+    'use_https': True
+}
+
 
 def _get_table_url(table_id):
     """Create a table url for the given table indentifier."""
 
+    components = {"http": "https://" if options['use_https'] else "http://",
+                  "baseurl": CBSOPENDATA,
+                  "bulk": BULK,
+                  "table_id": table_id}
+
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm
-    return "%(baseurl)s/%(bulk)s/%(table_id)s/" % \
-        {"baseurl": CBSOPENDATA, "bulk": BULK, "table_id": table_id}
+    return "{http}{baseurl}/{bulk}/{table_id}/".format(**components)
 
 
 def _download_metadata(table_id, metadata_name, select=None, filters=None):
@@ -189,8 +198,12 @@ def get_table_list(select=None, filters=None):
     # le%20eq%20%27Zeggenschap%20bedrijven;%20banen,%20grootte%27
 
     # http://opendata.cbs.nl/ODataCatalog/Tables?$format=json
-    url = "%(baseurl)s/%(catalog)s/Tables?$format=json" % \
-        {"baseurl": CBSOPENDATA, "catalog": CATALOG}
+
+    components = {"http": "https://" if options['use_https'] else "http://",
+                  "baseurl": CBSOPENDATA,
+                  "catalog": CATALOG}
+
+    url = "{http}{baseurl}/{catalog}/Tables?$format=json".format(**components)
 
     params = {}
     if select:
