@@ -7,8 +7,7 @@ import shutil
 import cbsodata
 
 datasets = [
-    # '81252NED',
-    # '82010NED',
+    '82010NED',
     '80884ENG'
 ]
 
