@@ -41,6 +41,15 @@ class TestCBSOData(unittest.TestCase):
         cbsodata.download_data(table_id)
 
     @parameterized.expand(datasets)
+    def test_http_https_download(self, table_id):
+
+        cbsodata.options['use_https'] = True
+        cbsodata.download_data(table_id)
+        cbsodata.options['use_https'] = False
+        cbsodata.download_data(table_id)
+        cbsodata.options['use_https'] = True
+
+    @parameterized.expand(datasets)
     def test_download_and_store(self, table_id):
 
         cbsodata.download_data(
