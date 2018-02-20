@@ -104,7 +104,14 @@ def _save_data(data, dir, metadata_name):
 
 
 def _filters(query):
-    """Filter rows with a CBS-style query."""
+    """Filter rows with a CBS-style query.
+
+    :param query: The rows to return.
+    :type query: str
+
+    :returns: URL parameter
+    :rtype: str
+    """
 
     return query
 
