@@ -85,8 +85,8 @@ options = OptionsManager()
 def _get_table_url(table_id):
     """Create a table url for the given table indentifier."""
 
-    components = {"http": "https://" if options['use_https'] else "http://",
-                  "baseurl": options['catalog_url'],
+    components = {"http": "https://" if options.use_https else "http://",
+                  "baseurl": options.catalog_url,
                   "bulk": BULK,
                   "table_id": table_id}
 
@@ -237,8 +237,8 @@ def get_table_list(select=None, filters=None):
 
     # http://opendata.cbs.nl/ODataCatalog/Tables?$format=json
 
-    components = {"http": "https://" if options['use_https'] else "http://",
-                  "baseurl": options['catalog_url'],
+    components = {"http": "https://" if options.use_https else "http://",
+                  "baseurl": options.catalog_url,
                   "catalog": CATALOG}
 
     url = "{http}{baseurl}/{catalog}/Tables?$format=json".format(**components)
@@ -353,9 +353,9 @@ def catalog(catalog_url, use_https=True):
 
     """
 
-    old_url = copy.copy(options['catalog_url'])
-    options['catalog_url'] = catalog_url
+    old_url = copy.copy(options.catalog_url)
+    options.catalog_url = catalog_url
 
     yield
 
-    options['catalog_url'] = old_url
+    options.catalog_url = old_url
