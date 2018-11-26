@@ -144,3 +144,17 @@ class TestCBSOData(unittest.TestCase):
         self.assertEqual(len(data[0].keys()), 2)
         self.assertEqual(len(data[5].keys()), 2)
         self.assertEqual(len(data[10].keys()), 2)
+
+    @parameterized.expand(datasets)
+    def test_get_table_list_derden(self, table_id):
+
+        with cbsodata.catalog('dataderden.cbs.nl'):
+            data = cbsodata.get_table_list()
+            assert len(data) > 0
+
+    @parameterized.expand(datasets)
+    def test_get_data_derden(self, table_id):
+
+        with cbsodata.catalog('dataderden.cbs.nl'):
+            data = cbsodata.get_data('47008NED')
+            assert len(data) > 0

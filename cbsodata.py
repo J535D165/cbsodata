@@ -28,30 +28,65 @@ __all__ = ['download_data', 'get_data', 'get_info', 'get_meta',
 
 import os
 import json
+import copy
+from contextlib import contextmanager
 
 import requests
 
 
 __version__ = "1.0"
 
-CBSOPENDATA = "opendata.cbs.nl"
+
+CBSOPENDATA = "opendata.cbs.nl"  # deprecate in next version
 API = "ODataApi/odata"
 BULK = "ODataFeed/odata"
 
 CATALOG = "ODataCatalog"
 FORMAT = "json"
 
+
+class OptionsManager():
+    """Class for option management"""
+
+    def __init__(self):
+
+        self.use_https = True
+        self.api_version = "3"
+
+        # Enable in next version
+        # self.catalog_url = "opendata.cbs.nl"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "catalog_url = {}, use_https = {}".format(
+            self.catalog_url, self.use_https)
+
+    def __getitem__(self, arg):
+        return getattr(self, arg)
+
+    def __setitem__(self, arg, value):
+        setattr(self, arg, value)
+
+    @property
+    def catalog_url(self):
+        return CBSOPENDATA
+
+    @catalog_url.setter
+    def catalog_url(self, url):
+        CBSOPENDATA = url  # noqa
+
+
 # User options
-options = {
-    'use_https': True
-}
+options = OptionsManager()
 
 
 def _get_table_url(table_id):
     """Create a table url for the given table indentifier."""
 
     components = {"http": "https://" if options['use_https'] else "http://",
-                  "baseurl": CBSOPENDATA,
+                  "baseurl": options['catalog_url'],
                   "bulk": BULK,
                   "table_id": table_id}
 
@@ -203,7 +238,7 @@ def get_table_list(select=None, filters=None):
     # http://opendata.cbs.nl/ODataCatalog/Tables?$format=json
 
     components = {"http": "https://" if options['use_https'] else "http://",
-                  "baseurl": CBSOPENDATA,
+                  "baseurl": options['catalog_url'],
                   "catalog": CATALOG}
 
     url = "{http}{baseurl}/{catalog}/Tables?$format=json".format(**components)
@@ -304,3 +339,23 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None):
                 pass
 
     return data
+
+
+@contextmanager
+def catalog(catalog_url, use_https=True):
+    """Context manager for catalogs.
+
+    :param catalog_url: Base url for catalog. For example:
+        dataderden.cbs.nl.
+    :param use_https: Use https.
+    :type catalog_url: str
+    :type use_https: bool
+
+    """
+
+    old_url = copy.copy(options['catalog_url'])
+    options['catalog_url'] = catalog_url
+
+    yield
+
+    options['catalog_url'] = old_url
