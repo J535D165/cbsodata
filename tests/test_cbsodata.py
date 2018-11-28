@@ -167,9 +167,9 @@ class TestCBSOData(unittest.TestCase):
             catalog_url='dataderden.cbs.nl'
         )
 
-        assert data_option1.keys() > 0
+        assert data_option1[0].keys() > 0
 
-        for key in data_option1.keys():
+        for key in data_option1[0].keys():
 
             assert data_option1[0][key] == \
                 data_option2[0][key] == data_option3[0][key]
@@ -192,9 +192,9 @@ class TestCBSOData(unittest.TestCase):
             catalog_url='dataderden.cbs.nl'
         )
 
-        assert data_option1.keys() > 0
+        assert data_option1[0].keys() > 0
 
-        for key in data_option1.keys():
+        for key in data_option1[0].keys():
 
             assert data_option1[0][key] == \
                 data_option2[0][key] == data_option3[0][key]
