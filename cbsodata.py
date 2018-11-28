@@ -82,23 +82,30 @@ class OptionsManager():
 options = OptionsManager()
 
 
-def _get_table_url(table_id):
+def _get_table_url(table_id, catalog_url=None):
     """Create a table url for the given table indentifier."""
 
+    if catalog_url is None:
+        _catalog_url = options.catalog_url
+    else:
+        _catalog_url = catalog_url
+
     components = {"http": "https://" if options.use_https else "http://",
-                  "baseurl": options.catalog_url,
+                  "baseurl": _catalog_url,
                   "bulk": BULK,
                   "table_id": table_id}
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm
-    return "{http}{baseurl}/{bulk}/{table_id}/".format(**components)
+    url = "{http}{baseurl}/{bulk}/{table_id}/".format(**components)
+    return url
 
 
-def _download_metadata(table_id, metadata_name, select=None, filters=None):
+def _download_metadata(table_id, metadata_name, select=None, filters=None,
+                       catalog_url=None):
     """Download metadata."""
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm/UntypedDataSet?$format=json
-    url = _get_table_url(table_id) + metadata_name
+    url = _get_table_url(table_id, catalog_url=catalog_url) + metadata_name
 
     params = {}
     params["$format"] = FORMAT
@@ -168,7 +175,8 @@ def _select(select):
     return select
 
 
-def download_data(table_id, dir=None, typed=False, select=None, filters=None):
+def download_data(table_id, dir=None, typed=False, select=None, filters=None,
+                  catalog_url=None):
     """
     Download the CBS data and metadata.
 
@@ -189,7 +197,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None):
     """
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm?$format=json
-    metadata_tables = _download_metadata(table_id, "")
+    metadata_tables = _download_metadata(table_id, "", catalog_url=catalog_url)
 
     # The names of the tables with metadata
     metadata_table_names = [table['name'] for table in metadata_tables]
@@ -205,9 +213,11 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None):
         # download table
         if table_name in ["TypedDataSet", "UntypedDataSet"]:
             metadata = _download_metadata(table_id, table_name,
-                                          select=select, filters=filters)
+                                          select=select, filters=filters,
+                                          catalog_url=catalog_url)
         else:
-            metadata = _download_metadata(table_id, table_name)
+            metadata = _download_metadata(table_id, table_name,
+                                          catalog_url=catalog_url)
 
         data[table_name] = metadata
 
@@ -218,7 +228,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None):
     return data
 
 
-def get_table_list(select=None, filters=None):
+def get_table_list(select=None, filters=None, catalog_url=None):
     """
     Get a list with the available tables.
 
@@ -237,8 +247,13 @@ def get_table_list(select=None, filters=None):
 
     # http://opendata.cbs.nl/ODataCatalog/Tables?$format=json
 
+    if catalog_url is None:
+        _catalog_url = options.catalog_url
+    else:
+        _catalog_url = catalog_url
+
     components = {"http": "https://" if options.use_https else "http://",
-                  "baseurl": options.catalog_url,
+                  "baseurl": _catalog_url,
                   "catalog": CATALOG}
 
     url = "{http}{baseurl}/{catalog}/Tables?$format=json".format(**components)
@@ -255,7 +270,7 @@ def get_table_list(select=None, filters=None):
     return res['value']
 
 
-def get_info(table_id):
+def get_info(table_id, catalog_url=None):
     """
     Get information about a table.
 
@@ -266,7 +281,9 @@ def get_info(table_id):
     :rtype: dict
     """
 
-    info_list = _download_metadata(table_id, "TableInfos")
+    info_list = _download_metadata(
+        table_id, "TableInfos", catalog_url=catalog_url
+    )
 
     if len(info_list) > 0:
         return info_list[0]
@@ -274,7 +291,7 @@ def get_info(table_id):
         return None
 
 
-def get_meta(table_id, name):
+def get_meta(table_id, name, catalog_url=None):
     """
     Get the metadata of a table.
 
@@ -287,10 +304,11 @@ def get_meta(table_id, name):
     :rtype: list
     """
 
-    return _download_metadata(table_id, name)
+    return _download_metadata(table_id, name, catalog_url=catalog_url)
 
 
-def get_data(table_id, dir=None, typed=False, select=None, filters=None):
+def get_data(table_id, dir=None, typed=False, select=None, filters=None,
+             catalog_url=None):
     """
     Get the CBS data table.
 
@@ -311,7 +329,8 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None):
     """
 
     metadata = download_data(table_id, dir=dir, typed=typed,
-                             select=select, filters=filters)
+                             select=select, filters=filters,
+                             catalog_url=catalog_url)
 
     if "TypedDataSet" in metadata.keys():
         data = metadata["TypedDataSet"]
