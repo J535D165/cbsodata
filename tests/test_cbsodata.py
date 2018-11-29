@@ -11,6 +11,11 @@ datasets = [
     '80884ENG'
 ]
 
+datasets_derden = [
+    '47003NED',
+    '47005NED'
+]
+
 TEST_ENV = 'test_env'
 
 
@@ -144,3 +149,58 @@ class TestCBSOData(unittest.TestCase):
         self.assertEqual(len(data[0].keys()), 2)
         self.assertEqual(len(data[5].keys()), 2)
         self.assertEqual(len(data[10].keys()), 2)
+
+    @parameterized.expand(datasets_derden)
+    def test_get_table_list_derden(self, table_id):
+
+        # option 1
+        print("global")
+        cbsodata.options.catalog_url = 'dataderden.cbs.nl'
+        data_option1 = cbsodata.get_table_list()
+        cbsodata.options.catalog_url = 'opendata.cbs.nl'
+
+        # option 2
+        print("context")
+        with cbsodata.catalog('dataderden.cbs.nl'):
+            data_option2 = cbsodata.get_table_list()
+
+        # option 3
+        print("argument")
+        data_option3 = cbsodata.get_table_list(
+            catalog_url='dataderden.cbs.nl'
+        )
+
+        assert len(data_option1[0].keys()) > 0
+
+        for key in data_option1[0].keys():
+
+            assert data_option1[0][key] == \
+                data_option2[0][key] == data_option3[0][key]
+
+    @parameterized.expand(datasets_derden)
+    def test_get_data_derden(self, table_id):
+
+        # option 1
+        print("global")
+        cbsodata.options.catalog_url = 'dataderden.cbs.nl'
+        data_option1 = cbsodata.get_data(table_id)
+        cbsodata.options.catalog_url = 'opendata.cbs.nl'
+
+        # option 2
+        print("context")
+        with cbsodata.catalog('dataderden.cbs.nl'):
+            data_option2 = cbsodata.get_data(table_id)
+
+        # option 3
+        print("argument")
+        data_option3 = cbsodata.get_data(
+            table_id,
+            catalog_url='dataderden.cbs.nl'
+        )
+
+        assert len(data_option1[0].keys()) > 0
+
+        for key in data_option1[0].keys():
+
+            assert data_option1[0][key] == \
+                data_option2[0][key] == data_option3[0][key]

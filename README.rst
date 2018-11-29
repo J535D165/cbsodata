@@ -129,6 +129,41 @@ file system.
 
     >>> data = cbsodata.get_data('82070ENG', dir="dir_to_save_data")
 
+Use other catalogs
+~~~~~~~~~~~~~~~~~~ 
+
+There are multiple ways to retrieve data from catalogs other than
+'opendata.cbs.nl'. The code below shows 3 different ways to retrieve data from
+the catalog 'dataderden.cbs.nl' (known from Iv3).
+
+Module level.
+
+.. code:: python
+
+   cbsodata.options.catalog_url = 'dataderden.cbs.nl'
+   # list tables
+   cbsodata.get_table_list()
+   # get dataset 47003NED
+   cbsodata.get_data('47003NED')
+
+Context managers.
+
+.. code:: python
+
+   with cbsodata.catalog('dataderden.cbs.nl'):
+       # list tables
+       cbsodata.get_table_list()
+       # get dataset 47003NED
+       cbsodata.get_data('47003NED')
+
+Function argument.
+
+.. code:: python
+
+   # list tables
+   cbsodata.get_table_list(catalog_url='dataderden.cbs.nl')
+   # get dataset 47003NED
+   cbsodata.get_data('47003NED', catalog_url='dataderden.cbs.nl')
 
 Pandas users
 ~~~~~~~~~~~~
