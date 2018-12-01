@@ -46,7 +46,7 @@ CATALOG = "ODataCatalog"
 FORMAT = "json"
 
 
-class OptionsManager():
+class OptionsManager(object):
     """Class for option management"""
 
     def __init__(self):
