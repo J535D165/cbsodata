@@ -1,15 +1,10 @@
 language: python
 
-env:
-  - TOXENV=py27
-  - TOXENV=py34
-  - TOXENV=py35
-  - TOXENV=py36
-  - TOXENV=py37
+python: ["2.7", "3.4", "3.5", "3.6"]
 
-install: pip install requests nose nose-parameterized
+install: pip install tox
 
-script: nosetests
+script: tox
 
 notifications:
   email: false
