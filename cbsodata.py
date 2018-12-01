@@ -29,10 +29,11 @@ __all__ = ['download_data', 'get_data', 'get_info', 'get_meta',
 import os
 import json
 import copy
+import logging
 from contextlib import contextmanager
 
 import requests
-
+from requests import Session, Request
 
 __version__ = "1.0"
 
@@ -68,6 +69,24 @@ class OptionsManager():
 
     def __setitem__(self, arg, value):
         setattr(self, arg, value)
+
+    def _log_setting_change(self, setting_name, old_value, new_value):
+        logging.info(
+            "Setting '{}' changed from '{}' to '{}'.".format(
+                setting_name, old_value, new_value)
+        )
+
+    def __getattr__(self, arg):
+        return getattr(self, arg)
+
+    def __setattr__(self, arg, value):
+        try:
+            old_value = copy.copy(getattr(self, arg))
+        except Exception:
+            old_value = "undefined"
+
+        self._log_setting_change(arg, old_value, value)
+        super(OptionsManager, self).__setattr__(arg, value)
 
     @property
     def catalog_url(self):
@@ -120,23 +139,33 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
     if filters:
         params['$filter'] = _filters(filters)
 
-    data = []
+    try:
+        data = []
 
-    while (url is not None):
+        while (url is not None):
 
-        r = requests.get(url, params=params)
+            s = Session()
+            p = Request('GET', url, params=params).prepare()
 
-        res = r.json(encoding='utf-8')
-        res_value = res['value']
+            logging.info("Download " + p.url)
 
-        data.extend(res_value)
+            r = s.send(p)
+            r.raise_for_status()
 
-        try:
-            url = res['odata.nextLink']
-        except KeyError:
-            url = None
+            res = r.json(encoding='utf-8')
+            data.extend(res['value'])
 
-    return data
+            try:
+                url = res['odata.nextLink']
+            except KeyError:
+                url = None
+
+        return data
+
+    except requests.HTTPError as http_err:
+        raise requests.HTTPError(
+            "Downloading table '{}' failed. {}".format(table_id, str(http_err))
+        )
 
 
 def _save_data(data, dir, metadata_name):
@@ -270,10 +299,22 @@ def get_table_list(select=None, filters=None, catalog_url=None):
     if filters:
         params['$filter'] = _filters(filters)
 
-    r = requests.get(url, params=params)
-    res = r.json()
+    try:
+        s = Session()
+        p = Request('GET', url, params=params).prepare()
 
-    return res['value']
+        logging.info("Download " + p.url)
+
+        r = s.send(p)
+        r.raise_for_status()
+        res = r.json()
+
+        return res['value']
+
+    except requests.HTTPError as http_err:
+        raise requests.HTTPError(
+            "Downloading table list failed. {}".format(str(http_err))
+        )
 
 
 def get_info(table_id, catalog_url=None):

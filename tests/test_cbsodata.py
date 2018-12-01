@@ -4,6 +4,8 @@ from nose_parameterized import parameterized
 import os
 import shutil
 
+import requests
+
 import cbsodata
 
 datasets = [
@@ -43,6 +45,25 @@ class TestCBSOData(unittest.TestCase):
     def test_download(self, table_id):
 
         cbsodata.download_data(table_id)
+
+    @parameterized.expand(['00000AAA'])
+    def test_http_error(self, table_id):
+
+        try:
+            cbsodata.get_data(table_id)
+        except requests.HTTPError as err:
+            assert True
+        else:
+            assert False
+
+    def test_http_error_table_list(self):
+
+        try:
+            cbsodata.get_table_list(catalog_url='test.cbs.nl')
+        except requests.ConnectionError as err:
+            assert True
+        else:
+            assert False
 
     @parameterized.expand(datasets)
     def test_http_https_download(self, table_id):
