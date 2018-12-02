@@ -108,7 +108,7 @@ def _get_catalog_url(url):
 
 
 def _get_table_url(table_id, catalog_url=None):
-    """Create a table url for the given table indentifier."""
+    """Create a table url for the given table identifier."""
 
     if catalog_url is None:
         _catalog_url = options.catalog_url
@@ -183,11 +183,15 @@ def _save_data(data, dir, metadata_name):
 def _filters(query):
     """Filter rows with a CBS-style query.
 
-    :param query: The rows to return.
-    :type query: str
+    Parameters
+    ----------
+    query : str
+        The rows to return.
 
-    :returns: URL parameter
-    :rtype: str
+    Returns
+    -------
+    str
+        Filter parameter for URL
     """
 
     return query
@@ -196,11 +200,15 @@ def _filters(query):
 def _select(select):
     """Select columns.
 
-    :param select: The columns to return.
-    :type select: str, list
+    Parameters
+    ----------
+    select : str
+        The columns to return.
 
-    :returns: URL parameter
-    :rtype: str
+    Returns
+    -------
+    str
+        Select parameter for URL
     """
 
     if isinstance(select, list):
@@ -211,23 +219,28 @@ def _select(select):
 
 def download_data(table_id, dir=None, typed=False, select=None, filters=None,
                   catalog_url=None):
-    """
-    Download the CBS data and metadata.
+    """Download the CBS data and metadata.
 
-    :param table_id: The indentifier of the table.
-    :param dir: Folder to save data to. If not given, data is not stored on
-            disk.
-    :param typed: Return a typed data table. Default False.
-    :param select: Column label or list of column labels to return.
-    :param filters: Return only rows that agree on the filter.
-    :type table_id: str
-    :type dir: str
-    :type typed: bool
-    :type select: list
-    :type filters: str
+    Parameters
+    ----------
+    table_id : str
+        The identifier of the table.
+    dir : str
+        Folder to save data to. If not given, data is not stored on
+        disk.
+    typed : bool
+        Return a typed data table. Default False.
+    select : str, list
+        Column label or list of column labels to return.
+    filters : str
+        Return only rows that agree on the filter.
+    catalog_url : str
+        The url of the catalog. Default "opendata.cbs.nl".
 
-    :returns: The requested data.
-    :rtype: list
+    Returns
+    -------
+    list
+        A dictionary with the (meta)data of the table
     """
 
     _catalog_url = _get_catalog_url(catalog_url)
@@ -267,17 +280,21 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
 
 
 def get_table_list(select=None, filters=None, catalog_url=None):
-    """
-    Get a list with the available tables.
+    """Get a list with the available tables.
 
-    :param select: Column label or list of column labels to return.
-    :param filters: Return only rows that agree on the filter.
-    :type select: list
-    :type filters: str
+    Parameters
+    ----------
+    select : list, str
+        Column label or list of column labels to return.
+    filters : str
+        Return only rows that agree on the filter.
+    catalog_url : str
+        The url of the catalog. Default "opendata.cbs.nl".
 
-    :returns: Information about the available tables (list of dictionaries)
-    :rtype: list
-
+    Returns
+    -------
+    list
+        A list with the description of each table in the catalog.
     """
 
     # http://opendata.cbs.nl/ODataCatalog/Tables?$format=json&$filter=ShortTit
@@ -318,14 +335,19 @@ def get_table_list(select=None, filters=None, catalog_url=None):
 
 
 def get_info(table_id, catalog_url=None):
-    """
-    Get information about a table.
+    """Get information about a table.
 
-    :param table_id: The indentifier of the table.
-    :type table_id: str
+    Parameters
+    ----------
+    table_id : str
+        The identifier of the table.
+    catalog_url : str
+        The url of the catalog. Default "opendata.cbs.nl".
 
-    :returns: Table information
-    :rtype: dict
+    Returns
+    -------
+    dict
+        Table information
     """
 
     info_list = _download_metadata(
@@ -341,16 +363,21 @@ def get_info(table_id, catalog_url=None):
 
 
 def get_meta(table_id, name, catalog_url=None):
-    """
-    Get the metadata of a table.
+    """Get the metadata of a table.
 
-    :param table_id: The indentifier of the table.
-    :param name: The name of the metadata (for example DataProperties).
-    :type table_id: str
-    :type name: str
+    Parameters
+    ----------
+    table_id : str
+        The identifier of the table.
+    name : str
+        The name of the metadata (for example DataProperties).
+    catalog_url : str
+        The url of the catalog. Default "opendata.cbs.nl".
 
-    :returns: list with metadata (dict type)
-    :rtype: list
+    Returns
+    -------
+    list
+        A list with metadata (dict type)
     """
 
     return _download_metadata(
@@ -360,23 +387,28 @@ def get_meta(table_id, name, catalog_url=None):
 
 def get_data(table_id, dir=None, typed=False, select=None, filters=None,
              catalog_url=None):
-    """
-    Get the CBS data table.
+    """Get the CBS data table.
 
-    :param table_id: The indentifier of the table.
-    :param dir: Folder to save data to. If not given, data is not stored
+    Parameters
+    ----------
+    table_id : str
+        The identifier of the table.
+    dir : str
+        Folder to save data to. If not given, data is not stored
             on disk.
-    :param typed: Return a typed data table. Default False.
-    :param select: Column label or list of column labels to return.
-    :param filters: Return only rows that agree on the filter.
-    :type table_id: str
-    :type dir: str
-    :type typed: bool
-    :type select: list
-    :type filters: str
+    typed : bool
+        Return a typed data table. Default False.
+    select : list
+        Column label or list of column labels to return.
+    filters : str
+        Return only rows that agree on the filter.
+    catalog_url : str
+        The url of the catalog. Default "opendata.cbs.nl".
 
-    :returns: The requested data.
-    :rtype: list
+    Returns
+    -------
+    list
+        The requested data.
     """
 
     _catalog_url = _get_catalog_url(catalog_url)
@@ -417,11 +449,13 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
 def catalog(catalog_url, use_https=True):
     """Context manager for catalogs.
 
-    :param catalog_url: Base url for catalog. For example:
+    Parameters
+    ----------
+    catalog_url : str
+        Url for the catalog. For example:
         dataderden.cbs.nl.
-    :param use_https: Use https.
-    :type catalog_url: str
-    :type use_https: bool
+    use_https : bool
+        Use https. Default True.
 
     """
 
