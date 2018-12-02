@@ -37,7 +37,6 @@ setup(
     install_requires=['requests'],
     py_modules=['cbsodata'],
     tests_require=[
-        'nose',
-        'nose-parameterized'
+        'pytest'
     ],
 )
