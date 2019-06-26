@@ -93,12 +93,12 @@ class OptionsManager(object):
 options = OptionsManager()
 
 
-def _odata4_request(url, kind="EntitySet", **kwargs):
+def _odata4_request(url, kind="EntitySet", params={}):
 
     try:
 
         s = Session()
-        p = Request('GET', url, params=kwargs).prepare()
+        p = Request('GET', url, params=params).prepare()
 
         logging.info("Download " + p.url)
 
@@ -124,7 +124,8 @@ def _odata4_request(url, kind="EntitySet", **kwargs):
         if "@odata.nextLink" in res.keys():
             data_next = _odata4_request(
                 res['@odata.nextLink'],
-                **kwargs
+                kind=kind,
+                params=params
             )
             data.extend(data_next)
 
@@ -133,7 +134,7 @@ def _odata4_request(url, kind="EntitySet", **kwargs):
         raise ValueError("Unknown kind '{}'.".format(kind))
 
 
-def _filters(filter):
+def _filter(filter):
     """Filter rows with a CBS-style query.
 
     Parameters
@@ -171,7 +172,7 @@ def download_data(table_id, catalog=None):
     raise NotImplementedError
 
 
-def get_metadata(dataset_id, catalog=None, filters=None):
+def get_metadata(dataset_id, catalog=None):
     """Get the metadata of the dataset.
 
     Parameters
@@ -184,8 +185,6 @@ def get_metadata(dataset_id, catalog=None, filters=None):
         The name of the catalog. Default options.catalog. Get a list
         of catalogs with get_catalog_list() or navigate to
         https://beta.opendata.cbs.nl/OData4/index.html.
-    filters : str
-        Return only rows that agree on the filter.
 
     Returns
     -------
@@ -219,7 +218,7 @@ def get_metadata(dataset_id, catalog=None, filters=None):
     return metadata
 
 
-def get_observations(table_id, catalog=None, filters=None):
+def get_observations(table_id, catalog=None, filter=None):
     """Get the observation of the dataset.
 
     Parameters
@@ -232,7 +231,7 @@ def get_observations(table_id, catalog=None, filters=None):
         The name of the catalog. Default options.catalog. Get a list
         of catalogs with get_catalog_list() or navigate to
         https://beta.opendata.cbs.nl/OData4/index.html.
-    filters : str
+    filter : str
         Return only rows that agree on the filter.
 
     Returns
@@ -247,12 +246,18 @@ def get_observations(table_id, catalog=None, filters=None):
         catalog,
         table_id
     )
-    return _odata4_request(observations_url, kind="EntitySet")
+    payload = {"$filter": filter} if filter else {}
+
+    return _odata4_request(
+        observations_url,
+        kind="EntitySet",
+        params=payload
+    )
 
 
 def get_data(dataset_id,
              catalog=None,
-             filters=None,
+             filter=None,
              add_codes=True,
              measure_vars=["Title", "Unit"],
              measure_group_vars=["Title"]):
@@ -268,8 +273,10 @@ def get_data(dataset_id,
         The name of the catalog. Default options.catalog. Get a list
         of catalogs with get_catalog_list() or navigate to
         https://beta.opendata.cbs.nl/OData4/index.html.
-    filters : str
-        Return only rows that agree on the filter.
+    filter : str
+        Filter observations. See
+        https://beta.opendata.cbs.nl/OData4/implement.html for filter.
+        At the moment, it is only possible to filter on observations.
 
     Returns
     -------
@@ -277,14 +284,17 @@ def get_data(dataset_id,
         A dictionary with the enriched observations.
     """
 
-    observations = get_observations(dataset_id, catalog)
+    observations = get_observations(
+        dataset_id,
+        catalog,
+        filter=filter
+    )
 
     if add_codes:
 
         # add codes
         meta = get_metadata(dataset_id,
-                            catalog=catalog,
-                            filters=filters)
+                            catalog=catalog)
 
         def _lookup_dict(d, meta, key, drop_key=True):
             r = dict(d, **meta.get(d[key], {}))

@@ -52,3 +52,11 @@ def test_info(dataset_id):
     info = cbsodata.get_dataset_info(dataset_id)
 
     assert isinstance(info, dict)
+
+
+@pytest.mark.parametrize("dataset_id", datasets)
+def test_filter(dataset_id):
+
+    x = cbsodata.get_dataset(dataset_id, filter="Id ge 1 and Id lt 10")
+
+    assert len(x) == 9
