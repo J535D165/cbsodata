@@ -29,7 +29,7 @@ def teardown_module(module):
     shutil.rmtree(TEST_ENV)
 
 
-@pytest.mark.parametrize("table_id", datasets)
+@pytest.mark.parametrize("dataset_id", datasets)
 def test_observations(dataset_id):
 
     x = cbsodata.get_observations(dataset_id)
@@ -69,3 +69,12 @@ def test_filter(dataset_id):
     x = cbsodata.get_dataset(dataset_id, filter="Id ge 1 and Id lt 10")
 
     assert len(x) == 9
+
+
+@pytest.mark.parametrize("dataset_id", datasets)
+def test_top_skip(dataset_id):
+
+    x = cbsodata.get_dataset(dataset_id, top=10, skip=5)
+
+    assert len(x) == 10
+    assert x[0]["Id"] == 5

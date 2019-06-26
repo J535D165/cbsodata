@@ -218,7 +218,8 @@ def get_metadata(dataset_id, catalog=None):
     return metadata
 
 
-def get_observations(table_id, catalog=None, filter=None):
+def get_observations(table_id, catalog=None, filter=None,
+                     top=None, skip=None):
     """Get the observation of the dataset.
 
     Parameters
@@ -233,6 +234,10 @@ def get_observations(table_id, catalog=None, filter=None):
         https://beta.opendata.cbs.nl/OData4/index.html.
     filter : str
         Return only rows that agree on the filter.
+    top : int
+        Return the top x observations. Default returns all.
+    skip : int
+        Skip the top x observations. Default 0.
 
     Returns
     -------
@@ -248,6 +253,11 @@ def get_observations(table_id, catalog=None, filter=None):
     )
     payload = {"$filter": filter} if filter else {}
 
+    if top is not None:
+        payload["$top"] = top
+    if skip is not None:
+        payload["$skip"] = skip
+
     return _odata4_request(
         observations_url,
         kind="EntitySet",
@@ -260,7 +270,9 @@ def get_data(dataset_id,
              filter=None,
              add_codes=True,
              measure_vars=["Title", "Unit"],
-             measure_group_vars=["Title"]):
+             measure_group_vars=["Title"],
+             top=None,
+             skip=None):
     """Get the enriched observation of the dataset.
 
     Parameters
@@ -277,6 +289,10 @@ def get_data(dataset_id,
         Filter observations. See
         https://beta.opendata.cbs.nl/OData4/implement.html for filter.
         At the moment, it is only possible to filter on observations.
+    top : int
+        Return the top x observations. Default returns all.
+    skip : int
+        Skip the top x observations. Default 0.
 
     Returns
     -------
@@ -287,7 +303,9 @@ def get_data(dataset_id,
     observations = get_observations(
         dataset_id,
         catalog,
-        filter=filter
+        filter=filter,
+        top=top,
+        skip=skip
     )
 
     if add_codes:
