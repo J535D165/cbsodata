@@ -43,9 +43,9 @@ Load the package with
 Tables
 ~~~~~~
 
-Statistics Netherlands (CBS) has a large amount of public available
+Statistics Netherlands (CBS) has a large amount of publicly available
 data tables (more than 4000 at the moment of writing). Each table is
-identified  by a unique identifier (``Identifier``).
+identified by a unique identifier (``Identifier``).
 
 .. code:: python
 
@@ -93,7 +93,7 @@ Data
 ~~~~
 
 The function you are looking for!! The function ``get_data`` returns a list of
-dicts with the table data.
+dictionaries with the table data.
 
 .. code:: python
 
@@ -182,3 +182,27 @@ The list of tables can be turned into a pandas DataFrame as well.
 
     >>> tables = pandas.DataFrame(cbsodata.get_table_list())
     >>> tables.head()
+
+
+OData Version 4
+---------------
+
+CBS migrates from `OData version 3`_ to `OData version 4`_. This migration comes
+with a lot of other changes. Read about the changes at the website of CBS https://beta.opendata.cbs.nl/OData4/index.html. 
+
+More documentation on this page will follow when the new API is officially released (it's now in beta)
+
+.. _`OData version 3`: https://www.odata.org/documentation/odata-version-3-0/
+.. _`OData version 4`: https://www.odata.org/documentation/
+
+.. code:: python
+
+    import cbsodata4 as cbsodata
+
+    obs = cbsodata.get_data("84120NED")
+
+Transform data into a pivot table with Pandas. 
+
+.. code:: python
+    
+    df.pivot(index='PeriodenTitle', columns='BelastingenEnWettelijkePremiesTitle', values='Value') 

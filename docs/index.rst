@@ -8,4 +8,5 @@ Contents:
 
    readme_link
    reference
+   reference_v4
 
