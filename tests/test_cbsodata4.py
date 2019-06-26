@@ -46,10 +46,19 @@ def test_metadata(dataset_id):
 
 
 @pytest.mark.parametrize("dataset_id", datasets)
-def test_info(dataset_id):
+def test_dataset_info(dataset_id):
 
     # testing
     info = cbsodata.get_dataset_info(dataset_id)
+
+    assert isinstance(info, dict)
+
+
+@pytest.mark.parametrize("dataset_id", datasets)
+def test_catalog_info(dataset_id):
+
+    # testing
+    info = cbsodata.get_catalog_info(dataset_id)
 
     assert isinstance(info, dict)
 

@@ -396,7 +396,7 @@ def get_catalog_info(catalog):
         catalog
     )
 
-    return _odata4_request(catalog_url)
+    return _odata4_request(catalog_url, kind="Singleton")
 
 
 def get_dataset_list(catalog=None):
@@ -451,7 +451,7 @@ def get_dataset_info(dataset_id, catalog=None):
         dataset_id
     )
 
-    return _odata4_request(url)
+    return _odata4_request(url, kind="Singleton")
 
 
 @contextmanager
