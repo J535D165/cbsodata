@@ -34,10 +34,11 @@ __all__ = [
     'get_metadata',
     'get_observations']
 
-import os
-import json
 import copy
+import json
 import logging
+import os
+import re
 from contextlib import contextmanager
 
 import requests
@@ -106,11 +107,11 @@ def _odata4_request(url, kind="EntitySet", params={}):
         r.raise_for_status()
 
     except requests.HTTPError as http_err:
-        raise requests.HTTPError(
-            "Downloading metadata '{}' failed. {}".format(
-                p.url, str(http_err)
-            )
+        http_err.message = "Downloading metadata '{}' failed. {}".format(
+            p.url, str(http_err)
         )
+
+        raise http_err
 
     res = r.json(encoding='utf-8')
 
@@ -268,9 +269,14 @@ def get_observations(table_id, catalog=None, filter=None,
 def get_data(dataset_id,
              catalog=None,
              filter=None,
-             add_codes=True,
              measure_vars=["Title", "Unit"],
+             include_measure_code_id=True,
              measure_group_vars=["Title"],
+             include_measure_group_id=True,
+             dimension_vars=["Title"],
+             include_dimension_code_id=True,
+             dimension_group_vars=["Title"],
+             include_dimension_group_id=False,
              top=None,
              skip=None):
     """Get the enriched observation of the dataset.
@@ -289,6 +295,30 @@ def get_data(dataset_id,
         Filter observations. See
         https://beta.opendata.cbs.nl/OData4/implement.html for filter.
         At the moment, it is only possible to filter on observations.
+    measure_vars : list
+        A list of labels and variables to include for each measure
+        code. Examples are "Title", "Description", "DataType",
+        "Unit", "Format","Decimals","PresentationType".
+        Default ["Title", "Unit"]
+    measure_group_vars : list
+        A list of labels and variables to include for each measure
+        group. Examples are "Title", "Description" and "ParentID"
+        Default ["Title"]
+    include_measure_group_id : bool
+        Include the Identifier of the Measure Group. Default True.
+    dimension_vars : list
+        A list of labels and variables to include for each dimension
+        code. Examples are "Title", "Description", "DataType",
+        "Unit", "Format","Decimals","PresentationType".
+        Default ["Title", "Unit"]
+    dimension_group_vars : list
+        A list of labels and variables to include for each dimension
+        group. Examples are "Title", "Description" and "ParentID"
+        Default ["Title"]
+    include_dimension_group_id : bool
+        Include the Identifier of the Dimension Group. Default False.
+        (The default of this option is False because the Group ID
+        has no added value.)
     top : int
         Return the top x observations. Default returns all.
     skip : int
@@ -308,69 +338,110 @@ def get_data(dataset_id,
         skip=skip
     )
 
-    if add_codes:
+    # add codes
+    meta = get_metadata(dataset_id,
+                        catalog=catalog)
 
-        # add codes
-        meta = get_metadata(dataset_id,
-                            catalog=catalog)
+    def _lookup_dict(d, meta, key, drop_key=True):
+        r = dict(d, **meta.get(d[key], {}))
+        if drop_key:
+            del r[key]
+        return r
 
-        def _lookup_dict(d, meta, key, drop_key=True):
-            r = dict(d, **meta.get(d[key], {}))
-            if drop_key:
-                del r[key]
-            return r
+    if measure_vars or measure_group_vars:
 
-        # measures codes
-        if measure_group_vars:
-            _measure_vars = measure_vars + ["MeasureGroupID"]
-        else:
-            _measure_vars = measure_vars
+        # transform measure codes into key-value pairs
+        code_meas_meta_dict = {}
+        for d in meta["MeasureCodes"]:  # loop over all meta records
 
-        code_meta_dict = {
-            d["Identifier"]: {k: d[k] for k in _measure_vars}
-            for d in meta["MeasureCodes"]
-        }
+            # include all measure_vars with the name "Measure"
+            # as a prefix
+            temp_meas_dict = {
+                "Measure" + k: d[k] for k in measure_vars
+            }
+
+            # if there are group variables to include, we need the
+            # MeasureGroupID.
+            if measure_group_vars:
+                temp_meas_dict["MeasureGroupID"] = d["MeasureGroupID"]
+
+            # update the dict
+            code_meas_meta_dict[d["Identifier"]] = temp_meas_dict
+
         observations = [
-            _lookup_dict(d, code_meta_dict, "Measure", drop_key=False)
+            _lookup_dict(d, code_meas_meta_dict, "Measure",
+                         drop_key=not include_measure_code_id)
             for d in observations
         ]
 
         # measure groups
         if "MeasureGroups" in meta.keys() and measure_group_vars:
-            group_meta_dict = {d["ID"]: {
-                "MeasureGroupTitle": d["Title"]}
+            group_meta_dict = {
+                d["ID"]: {"MeasureGroup" + k: d[k] for k in measure_group_vars}
                 for d in meta["MeasureGroups"]}
-            observations = [_lookup_dict(d, group_meta_dict, "MeasureGroupID")
-                            for d in observations]
+            observations = [
+                _lookup_dict(
+                    d,
+                    group_meta_dict,
+                    "MeasureGroupID",
+                    drop_key=not include_measure_group_id
+                )
+                for d in observations]
 
-        # dimension codes
+    # dimension codes
+    if dimension_vars or dimension_group_vars:
+
+        # get a list of the dimension names
         dimensions = [dim["Identifier"] for dim in meta['Dimensions']]
 
+        # add code and group info for each dimension
         for dim in dimensions:
 
-            # codes
-            code_meta_dict = {
-                d["Identifier"]: {
-                    dim + "Title": d["Title"],
-                    dim + "GroupID": d["DimensionGroupID"]}
-                for d in meta[dim + "Codes"]
-            }
+            # transform codes into key-value pairs
+            code_dim_meta_dict = {}
+            for d in meta[dim + "Codes"]:  # loop over all meta records
+
+                # include all dimension_vars with the name of the dimension
+                # as a prefix
+                temp_dim_dict = {
+                    dim + k: d[k] for k in dimension_vars
+                }
+
+                # if there are group variables to include, we need the GroupID.
+                if dimension_group_vars:
+                    temp_dim_dict[dim + "GroupID"] = d["DimensionGroupID"]
+
+                code_dim_meta_dict[d["Identifier"]] = temp_dim_dict
+
+            # Update the observations
             observations = [
-                _lookup_dict(d, code_meta_dict, dim, drop_key=False)
+                _lookup_dict(d, code_dim_meta_dict, key=dim,
+                             drop_key=not include_dimension_code_id)
                 for d in observations
             ]
 
-            # groups
-            meta_group_name = dim + "Groups"
+            # append dimension group vars.
+            if dimension_group_vars:
 
-            if meta_group_name in meta.keys():
-                group_meta_dict = {d["ID"]: {
-                    dim + "GroupTitle": d["Title"]}
-                    for d in meta[meta_group_name]}
-                observations = [
-                    _lookup_dict(d, group_meta_dict, dim + "GroupID")
-                    for d in observations
-                ]
+                # groups
+                meta_group_name = dim + "Groups"
+
+                if meta_group_name in meta.keys():
+                    group_meta_dict = {
+                        d["ID"]: {
+                            dim + "Group" + k: d[k]
+                            for k in dimension_group_vars
+                        }
+                        for d in meta[meta_group_name]}
+                    observations = [
+                        _lookup_dict(
+                            d,
+                            group_meta_dict,
+                            dim + "GroupID",
+                            drop_key=not include_dimension_group_id
+                        )
+                        for d in observations
+                    ]
 
     return observations
 
@@ -409,12 +480,34 @@ def get_catalog_info(catalog):
         A dictionary with the description of the catalog.
     """
 
-    catalog_url = "{}/Catalogs/{}".format(
-        options.odata_url,
-        catalog
-    )
+    try:
+        catalog_url = "{}/Catalogs/{}".format(
+            options.odata_url,
+            catalog
+        )
 
-    return _odata4_request(catalog_url, kind="Singleton")
+        return _odata4_request(catalog_url, kind="Singleton")
+
+    except requests.HTTPError as err:
+
+        # check if catalog is a dataset to get more informative error
+        pattern = re.compile(r"\d{5,6}[A-Z]{3}")
+        catalog_is_dataset = pattern.match(catalog)
+
+        if catalog_is_dataset:
+            raise ValueError(
+                "Catalog '{}' seems to be a dataset identifier.".format(
+                    catalog
+                )
+            )
+        elif err.response.status_code == 404:
+            raise ValueError(
+                "Catalog '{}' not found.".format(
+                    catalog
+                )
+            )
+        else:
+            raise err
 
 
 def get_dataset_list(catalog=None):
