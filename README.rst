@@ -184,8 +184,8 @@ The list of tables can be turned into a pandas DataFrame as well.
     >>> tables.head()
 
 
-OData Version 4
----------------
+Odata API Version 4
+-------------------
 
 CBS migrates from `OData version 3`__ to `OData version 4`__. This migration comes
 with a lot of other changes. Read about the changes at the website of CBS https://beta.opendata.cbs.nl/OData4/index.html. 
