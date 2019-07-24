@@ -187,13 +187,13 @@ The list of tables can be turned into a pandas DataFrame as well.
 OData Version 4
 ---------------
 
-CBS migrates from `OData version 3`_ to `OData version 4`_. This migration comes
+CBS migrates from `OData version 3`__ to `OData version 4`__. This migration comes
 with a lot of other changes. Read about the changes at the website of CBS https://beta.opendata.cbs.nl/OData4/index.html. 
 
 More documentation on this page will follow when the new API is officially released (it's now in beta)
 
-.. _`OData version 3`: https://www.odata.org/documentation/odata-version-3-0/
-.. _`OData version 4`: https://www.odata.org/documentation/
+__ https://www.odata.org/documentation/odata-version-3-0/
+__ https://www.odata.org/documentation/
 
 .. code:: python
 
