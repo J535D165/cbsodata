@@ -1,8 +1,6 @@
 import os
 import shutil
 
-import requests
-
 import cbsodata4 as cbsodata
 # testing deps
 import pytest
