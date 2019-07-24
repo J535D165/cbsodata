@@ -133,6 +133,19 @@ def test_dataset_measure_vars():
     assert "MeasureGroupID" in x[0].keys()
 
 
+def test_dataset_drop_measure_id():
+
+    x = cbsodata.get_data(
+        "81589NED",
+        measure_vars=None,
+        measure_group_vars=None,
+        include_measure_code_id=False,
+        top=1
+    )
+
+    assert "Measure" not in x[0].keys()
+
+
 def test_dataset_dimension_vars():
 
     dataset_id = '83487NED'
@@ -175,3 +188,17 @@ def test_dataset_dimension_vars():
     )
 
     assert "WijkenEnBuurtenGroupID" in x[0].keys()
+
+
+def test_dataset_drop_dimension_id():
+
+    x = cbsodata.get_data(
+        "81589NED",
+        dimension_vars=None,
+        dimension_group_vars=None,
+        include_dimension_code_id=False,
+        top=1
+    )
+
+    assert "Perioden" not in x[0].keys()
+    assert "BedrijfstakkenBranchesSBI2008" not in x[0].keys()

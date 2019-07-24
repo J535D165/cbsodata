@@ -279,7 +279,15 @@ def get_data(dataset_id,
              include_dimension_group_id=False,
              top=None,
              skip=None):
-    """Get the enriched observation of the dataset.
+    """Get the enriched observations of the requested dataset.
+
+    This function can be used to retrieve observation/data from the
+    API. Each observation can be enriched with metadata of the
+    measures and dimensions.
+
+    The returned data is in a long format. Each row contains a
+    single observation. One can transform the data into a wide format
+    with Python tools like pandas.
 
     Parameters
     ----------
@@ -293,24 +301,29 @@ def get_data(dataset_id,
         https://beta.opendata.cbs.nl/OData4/index.html.
     filter : str
         Filter observations. See
-        https://beta.opendata.cbs.nl/OData4/implement.html for filter.
-        At the moment, it is only possible to filter on observations.
+        https://beta.opendata.cbs.nl/OData4/implement.html for filter
+        ideas. At the moment, it is only possible to filter on
+        observations.
     measure_vars : list
         A list of labels and variables to include for each measure
         code. Examples are "Title", "Description", "DataType",
-        "Unit", "Format","Decimals","PresentationType".
+        "Unit", "Format", "Decimals", "PresentationType".
         Default ["Title", "Unit"]
+    include_measure_code_id : bool
+        Include the Identifier of the Measure Code. Default True.
     measure_group_vars : list
         A list of labels and variables to include for each measure
-        group. Examples are "Title", "Description" and "ParentID"
+        group. Examples are "Title", "Description" and "ParentID".
         Default ["Title"]
     include_measure_group_id : bool
         Include the Identifier of the Measure Group. Default True.
     dimension_vars : list
         A list of labels and variables to include for each dimension
         code. Examples are "Title", "Description", "DataType",
-        "Unit", "Format","Decimals","PresentationType".
+        "Unit", "Format", "Decimals", "PresentationType".
         Default ["Title", "Unit"]
+    include_dimension_code_id : bool
+        Include the Identifier of the Dimension Code. Default True.
     dimension_group_vars : list
         A list of labels and variables to include for each dimension
         group. Examples are "Title", "Description" and "ParentID"
@@ -328,6 +341,41 @@ def get_data(dataset_id,
     -------
     list
         A dictionary with the enriched observations.
+
+    Examples
+    --------
+
+    >>> cbsodata.get_data("81589NED",
+    ...                   measure_vars=["Title", "DataType"],
+    ...                   top=1)
+    [{'Id': 0,
+      'Measure': 'M0000201',
+      'ValueAttribute': 'None',
+      'Value': 987345.0,
+      'BedrijfstakkenBranchesSBI2008': 'T001081',
+      'Perioden': '2007KW01',
+      'MeasureTitle': 'Totaal bedrijven',
+      'MeasureDataType': 'Long',
+      'MeasureGroupID': None,
+      'BedrijfstakkenBranchesSBI2008Title': 'A-U Alle economische ...',
+      'BedrijfstakkenBranchesSBI2008GroupTitle': 'Totaal',
+      'PeriodenTitle': '2007 1e kwartaal',
+      'PeriodenGroupTitle': 'Kwartalen'}]
+
+    >>> cbsodata.get_data("81589NED",
+    ...                   include_measure_code_id=False,
+    ...                   include_measure_group_id=False,
+    ...                   dimension_vars=["Title"],
+    ...                   dimension_group_vars=None,
+    ...                   include_dimension_code_id=False,
+    ...                   top=1)
+    [{'Id': 0,
+      'ValueAttribute': 'None',
+      'Value': 987345.0,
+      'MeasureTitle': 'Totaal bedrijven',
+      'MeasureUnit': 'aantal',
+      'BedrijfstakkenBranchesSBI2008Title': 'A-U Alle economische acti...',
+      'PeriodenTitle': '2007 1e kwartaal'}]
     """
 
     observations = get_observations(
@@ -347,6 +395,10 @@ def get_data(dataset_id,
         if drop_key:
             del r[key]
         return r
+
+    def _drop_key_value(d, key):
+        del d[key]
+        return d
 
     if measure_vars or measure_group_vars:
 
@@ -387,6 +439,9 @@ def get_data(dataset_id,
                     drop_key=not include_measure_group_id
                 )
                 for d in observations]
+    elif not (measure_vars or measure_group_vars) and \
+            not include_measure_code_id:
+        observations = [_drop_key_value(d, "Measure") for d in observations]
 
     # dimension codes
     if dimension_vars or dimension_group_vars:
@@ -442,6 +497,16 @@ def get_data(dataset_id,
                         )
                         for d in observations
                     ]
+
+    elif not (dimension_vars or dimension_group_vars) and \
+            not include_dimension_code_id:
+
+        # get a list of the dimension names
+        dimensions = [dim["Identifier"] for dim in meta['Dimensions']]
+
+        # add code and group info for each dimension
+        for dim in dimensions:
+            observations = [_drop_key_value(d, dim) for d in observations]
 
     return observations
 
