@@ -94,7 +94,7 @@ class OptionsManager(object):
 options = OptionsManager()
 
 
-def _odata4_request(url, kind="EntitySet", params={}):
+def _download_request(url, params={}):
 
     try:
 
@@ -106,6 +106,8 @@ def _odata4_request(url, kind="EntitySet", params={}):
         r = s.send(p)
         r.raise_for_status()
 
+        return r
+
     except requests.HTTPError as http_err:
         http_err.message = "Downloading metadata '{}' failed. {}".format(
             p.url, str(http_err)
@@ -113,26 +115,50 @@ def _odata4_request(url, kind="EntitySet", params={}):
 
         raise http_err
 
-    res = r.json(encoding='utf-8')
+
+def _parse_odata4_request(json_response, kind):
+    """Parse Odata4 requests.
+
+    Returns
+    -------
+    tuple
+        A tuple with the data (list or dict) in the first position
+        and the next link in the second. The latter one is None
+        is not given.
+    """
 
     # check the data context
     if kind == "Singleton":
-        del res["@odata.context"]
-        return res
+        del json_response["@odata.context"]
+        return json_response, None
     elif kind == "EntitySet":
-        data = copy.copy(res['value'])
+        data = json_response['value']
 
-        if "@odata.nextLink" in res.keys():
-            data_next = _odata4_request(
-                res['@odata.nextLink'],
-                kind=kind,
-                params=params
-            )
-            data.extend(data_next)
+        if "@odata.nextLink" in json_response.keys():
+            next_link = json_response['@odata.nextLink']
+        else:
+            next_link = None
 
-        return data
+        return data, next_link
     else:
         raise ValueError("Unknown kind '{}'.".format(kind))
+
+
+def _odata4_request(url, kind="EntitySet", params={}, follow_next_link=True):
+    """Make an Odata4 requests.
+    """
+
+    # download the page
+    r = _download_request(url, params=params)
+    res = r.json(encoding='utf-8')
+
+    data, next_link = _parse_odata4_request(res, kind)
+
+    if kind == "EntitySet" and follow_next_link and next_link:
+        data_next = _odata4_request(next_link, kind=kind, params=params)
+        data.extend(data_next)
+
+    return data
 
 
 def _filter(filter):
@@ -160,17 +186,48 @@ def _save_data(data, dir, metadata_name):
 
     fp = os.path.join(dir, metadata_name + '.json')
 
-    with open(fp, 'w') as output_file:
-        json.dump(data, output_file, indent=2)
+    if isinstance(data, dict):
+        with open(fp, 'w') as output_file:
+            json.dump(data, output_file, indent=2)
+    elif isinstance(data, list):
+        with open(fp, 'a') as output_file:
+            for line in data:
+                output_file.write(json.dumps(line) + "\n")
+    else:
+        ValueError("Unknown data type to export.")
 
 
-def _read_data(*args, **kwargs):
-    pass
+def download_dataset(dataset_id, catalog=None, params={},
+                     save_dir="tmp", include_metadata=True):
+    """Download the raw data package."""
 
+    # https://beta.opendata.cbs.nl/OData4/CBS/83765NED/
 
-def download_data(table_id, catalog=None):
+    catalog = options.catalog if catalog is None else catalog
+    dataset_url = "{}/{}/{}/".format(options.odata_url, catalog, dataset_id)
 
-    raise NotImplementedError
+    # download the page
+    res_index = _odata4_request(dataset_url, params=params)
+    _save_data(res_index, save_dir, "index")
+
+    # download metadata xml
+    if include_metadata:
+        metadata_url = "{}/$metadata".format(dataset_url)
+        xml_metadata = _download_request(metadata_url)
+        fp = os.path.join(save_dir, 'metadata.xml')
+        with open(fp, "w", encoding="utf-8") as f:
+            f.write(xml_metadata.text)
+
+    for metadata_object in res_index:
+
+        metadata_url = dataset_url + metadata_object['url']
+
+        # download and save data
+        res_meta = _odata4_request(
+            metadata_url,
+            kind=metadata_object['kind'],
+            params=params)
+        _save_data(res_meta, save_dir, metadata_object['url'])
 
 
 def get_metadata(dataset_id, catalog=None):

@@ -31,6 +31,14 @@ def teardown_module(module):
     shutil.rmtree(TEST_ENV)
 
 
+def test_download():
+
+    cbsodata.download_dataset(
+        "81589NED",
+        save_dir=os.path.join(TEST_ENV, "81589NED")
+    )
+
+
 @pytest.mark.parametrize("dataset_id", datasets)
 def test_observations(dataset_id):
 
