@@ -23,7 +23,8 @@
 
 """Statistics Netherlands opendata API client for Python"""
 
-from cbsodata.cbsodata import (download_data,
+from cbsodata.cbsodata import (catalog,
+                               download_data,
                                get_data,
                                get_info,
                                get_meta,
