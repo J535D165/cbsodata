@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 # Extract version from cbsodata.py
-for line in open('cbsodata.py'):
+for line in open(path.join('cbsodata', '__init__.py')):
     if line.startswith('__version__'):
         exec(line)
         break
@@ -35,7 +35,15 @@ setup(
     ],
     keywords='cbs statistics odata netherlands dutch',
     install_requires=['requests'],
-    py_modules=['cbsodata'],
+    entry_points={
+        # two entry points: cbs and cbsodata
+        'console_scripts': [
+            'cbsodata=__main__:main',
+            'cbs=__main__:main',
+        ],
+
+    },
+    py_modules=['cbsodata.cbsodata', 'cbsodata.__main__'],
     tests_require=[
         'pytest'
     ],

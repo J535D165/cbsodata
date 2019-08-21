@@ -24,7 +24,7 @@
 """Statistics Netherlands opendata API client for Python"""
 
 __all__ = ['download_data', 'get_data', 'get_info', 'get_meta',
-           'get_table_list', 'options']
+           'get_table_list', 'options', 'catalog']
 
 import os
 import json
@@ -34,8 +34,6 @@ from contextlib import contextmanager
 
 import requests
 from requests import Session, Request
-
-__version__ = "1.1"
 
 
 CBSOPENDATA = "opendata.cbs.nl"  # deprecate in next version
