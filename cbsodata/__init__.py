@@ -23,6 +23,6 @@
 
 """Statistics Netherlands opendata API client for Python"""
 
-from cbsodata.cbsodata import *
+from cbsodata.cbsodata3 import *
 
 __version__ = "1.1"
