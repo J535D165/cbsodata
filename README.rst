@@ -182,3 +182,51 @@ The list of tables can be turned into a pandas DataFrame as well.
 
     >>> tables = pandas.DataFrame(cbsodata.get_table_list())
     >>> tables.head()
+
+
+Command Line Interface
+----------------------
+
+This library ships with a Command Line Interface (CLI). 
+
+.. code:: bash 
+    
+    > cbsodata -h 
+    usage: cbsodata [-h] [--version] [subcommand]
+
+    CBS Open Data: Command Line Interface
+
+    positional arguments:
+      subcommand  the subcommand (one of 'data', 'info', 'list')
+
+    optional arguments:
+      -h, --help  show this help message and exit
+      --version   show the package version
+
+Download data:
+
+.. code:: bash 
+    
+    > cbsodata data 82010NED 
+    
+Retrieve table information:
+
+.. code:: bash 
+    
+    > cbsodata info 82010NED 
+
+Retrieve a list with all tables:
+
+.. code:: bash
+
+    > cbsodata list
+
+
+Export data
+~~~~~~~~~~~
+
+Use the flag ``-o`` to load data to a file (JSON lines). 
+
+.. code:: bash
+    
+    > cbsodata data 82010NED -o table_82010NED.jl

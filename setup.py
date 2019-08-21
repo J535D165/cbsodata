@@ -35,6 +35,14 @@ setup(
     ],
     keywords='cbs statistics odata netherlands dutch',
     install_requires=['requests'],
+    entry_points={
+        # two entry points: cbs and cbsodata
+        'console_scripts': [
+            'cbsodata=__main__:main',
+            'cbs=__main__:main',
+        ],
+
+    },
     py_modules=['cbsodata'],
     tests_require=[
         'pytest'
