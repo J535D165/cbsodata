@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 # Extract version from cbsodata.py
-for line in open('cbsodata.py'):
+for line in open(path.join('cbsodata', '__init__.py')):
     if line.startswith('__version__'):
         exec(line)
         break
