@@ -43,7 +43,7 @@ setup(
         ],
 
     },
-    py_modules=['cbsodata'],
+    py_modules=['cbsodata.cbsodata', 'cbsodata.__main__'],
     tests_require=[
         'pytest'
     ],
