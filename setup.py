@@ -38,8 +38,8 @@ setup(
     entry_points={
         # two entry points: cbs and cbsodata
         'console_scripts': [
-            'cbsodata=__main__:main',
-            'cbs=__main__:main',
+            'cbsodata=cbsodata.__main__:main',
+            'cbs=cbsodata.__main__:main',
         ],
 
     },
