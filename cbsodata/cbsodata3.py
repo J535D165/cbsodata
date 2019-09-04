@@ -123,7 +123,7 @@ def _get_table_url(table_id, catalog_url=None):
 
 
 def _download_metadata(table_id, metadata_name, select=None, filters=None,
-                       catalog_url=None):
+                       catalog_url=None, proxies=None):
     """Download metadata."""
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm/UntypedDataSet?$format=json
@@ -147,7 +147,7 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
 
             logging.info("Download " + p.url)
 
-            r = s.send(p)
+            r = s.send(p, proxies=proxies)
             r.raise_for_status()
 
             res = r.json(encoding='utf-8')
@@ -277,7 +277,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
     return data
 
 
-def get_table_list(select=None, filters=None, catalog_url=None):
+def get_table_list(select=None, filters=None, catalog_url=None, proxies=None):
     """Get a list with the available tables.
 
     Parameters
@@ -320,7 +320,7 @@ def get_table_list(select=None, filters=None, catalog_url=None):
 
         logging.info("Download " + p.url)
 
-        r = s.send(p)
+        r = s.send(p, proxies=proxies)
         r.raise_for_status()
         res = r.json()
 
