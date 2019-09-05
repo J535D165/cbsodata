@@ -440,14 +440,14 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
     _catalog_url = _get_catalog_url(catalog_url)
 
     metadata = download_data(
-                            table_id,
-                            dir=dir,
-                            typed=typed,
-                            select=select,
-                            filters=filters,
-                            catalog_url=_catalog_url,
-                            proxies=_proxies,
-                            )
+        table_id,
+        dir=dir,
+        typed=typed,
+        select=select,
+        filters=filters,
+        catalog_url=_catalog_url,
+        proxies=_proxies,
+    )
 
     if "TypedDataSet" in metadata.keys():
         data = metadata["TypedDataSet"]
