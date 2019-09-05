@@ -236,7 +236,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
     proxies : dict
-        Dictionary mapping protocol to the URL of the proxy to be 
+        Dictionary mapping protocol to the URL of the proxy to be
         used on each Request. Default None.
 
     Returns
@@ -267,10 +267,12 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
         if table_name in ["TypedDataSet", "UntypedDataSet"]:
             metadata = _download_metadata(table_id, table_name,
                                           select=select, filters=filters,
-                                          catalog_url=_catalog_url, proxies=proxies)
+                                          catalog_url=_catalog_url,
+                                          proxies=proxies)
         else:
             metadata = _download_metadata(table_id, table_name,
-                                          catalog_url=_catalog_url, proxies=proxies)
+                                          catalog_url=_catalog_url,
+                                          proxies=proxies)
 
         data[table_name] = metadata
 
@@ -293,7 +295,7 @@ def get_table_list(select=None, filters=None, catalog_url=None, proxies=None):
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
     proxies : dict
-        Dictionary mapping protocol to the URL of the proxy to be 
+        Dictionary mapping protocol to the URL of the proxy to be
         used on each Request. Default None.
 
     Returns
@@ -350,7 +352,7 @@ def get_info(table_id, catalog_url=None, proxies=None):
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
     proxies : dict
-        Dictionary mapping protocol to the URL of the proxy to be 
+        Dictionary mapping protocol to the URL of the proxy to be
         used on each Request. Default None.
 
     Returns
@@ -358,7 +360,7 @@ def get_info(table_id, catalog_url=None, proxies=None):
     dict
         Table information
     """
-    
+
     _proxies = options.proxies if proxies is None else proxies
 
     info_list = _download_metadata(
@@ -386,7 +388,7 @@ def get_meta(table_id, name, catalog_url=None, proxies=None):
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
     proxies : dict
-        Dictionary mapping protocol to the URL of the proxy to be 
+        Dictionary mapping protocol to the URL of the proxy to be
         used on each Request. Default None.
 
     Returns
@@ -394,12 +396,12 @@ def get_meta(table_id, name, catalog_url=None, proxies=None):
     list
         A list with metadata (dict type)
     """
-    
+
     _proxies = options.proxies if proxies is None else proxies
 
     return _download_metadata(
-        table_id, 
-        name, 
+        table_id,
+        name,
         catalog_url=_get_catalog_url(catalog_url),
         proxies=_proxies,
     )
@@ -425,7 +427,7 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
     proxies : dict
-        Dictionary mapping protocol to the URL of the proxy to be 
+        Dictionary mapping protocol to the URL of the proxy to be
         used on each Request. Default None.
 
     Returns
@@ -433,19 +435,19 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
     list
         The requested data.
     """
-    
+
     _proxies = options.proxies if proxies is None else proxies
     _catalog_url = _get_catalog_url(catalog_url)
 
     metadata = download_data(
-            table_id, 
-            dir=dir, 
-            typed=typed,
-            select=select, 
-            filters=filters,
-            catalog_url=_catalog_url, 
-            proxies=_proxies,
-            )
+                            table_id,
+                            dir=dir,
+                            typed=typed,
+                            select=select,
+                            filters=filters,
+                            catalog_url=_catalog_url,
+                            proxies=_proxies,
+                            )
 
     if "TypedDataSet" in metadata.keys():
         data = metadata["TypedDataSet"]
