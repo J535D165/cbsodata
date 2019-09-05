@@ -51,6 +51,7 @@ class OptionsManager(object):
 
         self.use_https = True
         self.api_version = "3"
+        self.proxies = None
 
         # Enable in next version
         # self.catalog_url = "opendata.cbs.nl"
@@ -123,7 +124,7 @@ def _get_table_url(table_id, catalog_url=None):
 
 
 def _download_metadata(table_id, metadata_name, select=None, filters=None,
-                       catalog_url=None):
+                       catalog_url=None, proxies=None):
     """Download metadata."""
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm/UntypedDataSet?$format=json
@@ -147,7 +148,7 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
 
             logging.info("Download " + p.url)
 
-            r = s.send(p)
+            r = s.send(p, proxies=proxies)
             r.raise_for_status()
 
             res = r.json(encoding='utf-8')
@@ -216,7 +217,7 @@ def _select(select):
 
 
 def download_data(table_id, dir=None, typed=False, select=None, filters=None,
-                  catalog_url=None):
+                  catalog_url=None, proxies=None):
     """Download the CBS data and metadata.
 
     Parameters
@@ -234,6 +235,9 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
         Return only rows that agree on the filter.
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    proxies : dict
+        Dictionary mapping protocol to the URL of the proxy to be
+        used on each Request. Default None.
 
     Returns
     -------
@@ -245,7 +249,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm?$format=json
     metadata_tables = _download_metadata(
-        table_id, "", catalog_url=_catalog_url
+        table_id, "", catalog_url=_catalog_url, proxies=proxies
     )
 
     # The names of the tables with metadata
@@ -263,10 +267,12 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
         if table_name in ["TypedDataSet", "UntypedDataSet"]:
             metadata = _download_metadata(table_id, table_name,
                                           select=select, filters=filters,
-                                          catalog_url=_catalog_url)
+                                          catalog_url=_catalog_url,
+                                          proxies=proxies)
         else:
             metadata = _download_metadata(table_id, table_name,
-                                          catalog_url=_catalog_url)
+                                          catalog_url=_catalog_url,
+                                          proxies=proxies)
 
         data[table_name] = metadata
 
@@ -277,7 +283,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
     return data
 
 
-def get_table_list(select=None, filters=None, catalog_url=None):
+def get_table_list(select=None, filters=None, catalog_url=None, proxies=None):
     """Get a list with the available tables.
 
     Parameters
@@ -288,6 +294,9 @@ def get_table_list(select=None, filters=None, catalog_url=None):
         Return only rows that agree on the filter.
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    proxies : dict
+        Dictionary mapping protocol to the URL of the proxy to be
+        used on each Request. Default None.
 
     Returns
     -------
@@ -300,6 +309,7 @@ def get_table_list(select=None, filters=None, catalog_url=None):
 
     # http://opendata.cbs.nl/ODataCatalog/Tables?$format=json
 
+    _proxies = options.proxies if proxies is None else proxies
     _catalog_url = _get_catalog_url(catalog_url)
 
     components = {"http": "https://" if options.use_https else "http://",
@@ -320,7 +330,7 @@ def get_table_list(select=None, filters=None, catalog_url=None):
 
         logging.info("Download " + p.url)
 
-        r = s.send(p)
+        r = s.send(p, proxies=_proxies)
         r.raise_for_status()
         res = r.json()
 
@@ -332,7 +342,7 @@ def get_table_list(select=None, filters=None, catalog_url=None):
         )
 
 
-def get_info(table_id, catalog_url=None):
+def get_info(table_id, catalog_url=None, proxies=None):
     """Get information about a table.
 
     Parameters
@@ -341,6 +351,9 @@ def get_info(table_id, catalog_url=None):
         The identifier of the table.
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    proxies : dict
+        Dictionary mapping protocol to the URL of the proxy to be
+        used on each Request. Default None.
 
     Returns
     -------
@@ -348,10 +361,13 @@ def get_info(table_id, catalog_url=None):
         Table information
     """
 
+    _proxies = options.proxies if proxies is None else proxies
+
     info_list = _download_metadata(
         table_id,
         "TableInfos",
-        catalog_url=_get_catalog_url(catalog_url)
+        catalog_url=_get_catalog_url(catalog_url),
+        proxies=_proxies,
     )
 
     if len(info_list) > 0:
@@ -360,7 +376,7 @@ def get_info(table_id, catalog_url=None):
         return None
 
 
-def get_meta(table_id, name, catalog_url=None):
+def get_meta(table_id, name, catalog_url=None, proxies=None):
     """Get the metadata of a table.
 
     Parameters
@@ -371,6 +387,9 @@ def get_meta(table_id, name, catalog_url=None):
         The name of the metadata (for example DataProperties).
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    proxies : dict
+        Dictionary mapping protocol to the URL of the proxy to be
+        used on each Request. Default None.
 
     Returns
     -------
@@ -378,13 +397,18 @@ def get_meta(table_id, name, catalog_url=None):
         A list with metadata (dict type)
     """
 
+    _proxies = options.proxies if proxies is None else proxies
+
     return _download_metadata(
-        table_id, name, catalog_url=_get_catalog_url(catalog_url)
+        table_id,
+        name,
+        catalog_url=_get_catalog_url(catalog_url),
+        proxies=_proxies,
     )
 
 
 def get_data(table_id, dir=None, typed=False, select=None, filters=None,
-             catalog_url=None):
+             catalog_url=None, proxies=None):
     """Get the CBS data table.
 
     Parameters
@@ -402,6 +426,9 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
         Return only rows that agree on the filter.
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    proxies : dict
+        Dictionary mapping protocol to the URL of the proxy to be
+        used on each Request. Default None.
 
     Returns
     -------
@@ -409,11 +436,18 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
         The requested data.
     """
 
+    _proxies = options.proxies if proxies is None else proxies
     _catalog_url = _get_catalog_url(catalog_url)
 
-    metadata = download_data(table_id, dir=dir, typed=typed,
-                             select=select, filters=filters,
-                             catalog_url=_catalog_url)
+    metadata = download_data(
+        table_id,
+        dir=dir,
+        typed=typed,
+        select=select,
+        filters=filters,
+        catalog_url=_catalog_url,
+        proxies=_proxies,
+    )
 
     if "TypedDataSet" in metadata.keys():
         data = metadata["TypedDataSet"]
