@@ -25,4 +25,4 @@
 
 from cbsodata.cbsodata3 import *
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
