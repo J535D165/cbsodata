@@ -52,7 +52,12 @@ class OptionsManager(object):
 
         self.use_https = True
         self.api_version = "3"
-        self.requests = {}  # proxies, cert, verify
+        # Get default proxy settings from environment variables
+        proxies = {
+            "http": os.environ.get("http_proxy", None),
+            "https": os.environ.get("https_proxy", None),
+        }
+        self.requests = {"proxies" : proxies}  # proxies, cert, verify
 
         # Enable in next version
         # self.catalog_url = "opendata.cbs.nl"
