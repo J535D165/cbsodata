@@ -178,6 +178,7 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
 
             try:
                 url = res['odata.nextLink']
+                params = {}
             except KeyError:
                 url = None
 
