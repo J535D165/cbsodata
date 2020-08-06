@@ -24,18 +24,17 @@
 """Statistics Netherlands opendata API client for Python"""
 
 __all__ = ['download_data', 'get_data', 'get_info', 'get_meta',
-           'get_table_list', 'options']
+           'get_table_list', 'options', 'catalog']
 
 import os
 import json
 import copy
 import logging
+import warnings
 from contextlib import contextmanager
 
 import requests
 from requests import Session, Request
-
-__version__ = "1.1"
 
 
 CBSOPENDATA = "opendata.cbs.nl"  # deprecate in next version
@@ -53,6 +52,12 @@ class OptionsManager(object):
 
         self.use_https = True
         self.api_version = "3"
+        # Get default proxy settings from environment variables
+        proxies = {
+            "http": os.environ.get("http_proxy", None),
+            "https": os.environ.get("https_proxy", None),
+        }
+        self.requests = {"proxies": proxies}  # proxies, cert, verify
 
         # Enable in next version
         # self.catalog_url = "opendata.cbs.nl"
@@ -97,6 +102,18 @@ class OptionsManager(object):
         global CBSOPENDATA
         CBSOPENDATA = url  # noqa
 
+    @property
+    def proxies(self):
+        return self.requests.get('proxies', None)
+
+    @proxies.setter
+    def proxies(self, proxies):
+        warnings.warn(
+            "Deprecated, use options.requests['proxies'] instead",
+            DeprecationWarning
+        )
+        self.requests['proxies'] = proxies
+
 
 # User options
 options = OptionsManager()
@@ -125,7 +142,7 @@ def _get_table_url(table_id, catalog_url=None):
 
 
 def _download_metadata(table_id, metadata_name, select=None, filters=None,
-                       catalog_url=None):
+                       catalog_url=None, **kwargs):
     """Download metadata."""
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm/UntypedDataSet?$format=json
@@ -139,6 +156,10 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
     if filters:
         params['$filter'] = _filters(filters)
 
+    # additional parameters to requests
+    request_kwargs = options.requests.copy()
+    request_kwargs.update(kwargs)
+
     try:
         data = []
 
@@ -149,7 +170,7 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
 
             logging.info("Download " + p.url)
 
-            r = s.send(p)
+            r = s.send(p, **request_kwargs)
             r.raise_for_status()
 
             res = r.json(encoding='utf-8')
@@ -157,6 +178,7 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
 
             try:
                 url = res['odata.nextLink']
+                params = {}
             except KeyError:
                 url = None
 
@@ -218,7 +240,7 @@ def _select(select):
 
 
 def download_data(table_id, dir=None, typed=False, select=None, filters=None,
-                  catalog_url=None):
+                  catalog_url=None, **kwargs):
     """Download the CBS data and metadata.
 
     Parameters
@@ -236,6 +258,9 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
         Return only rows that agree on the filter.
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    **kwargs :
+        Optional arguments that ``requests.get()`` takes. For example,
+        `proxies`, `cert` and `verify`.
 
     Returns
     -------
@@ -247,7 +272,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm?$format=json
     metadata_tables = _download_metadata(
-        table_id, "", catalog_url=_catalog_url
+        table_id, "", catalog_url=_catalog_url, **kwargs
     )
 
     # The names of the tables with metadata
@@ -265,10 +290,12 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
         if table_name in ["TypedDataSet", "UntypedDataSet"]:
             metadata = _download_metadata(table_id, table_name,
                                           select=select, filters=filters,
-                                          catalog_url=_catalog_url)
+                                          catalog_url=_catalog_url,
+                                          **kwargs)
         else:
             metadata = _download_metadata(table_id, table_name,
-                                          catalog_url=_catalog_url)
+                                          catalog_url=_catalog_url,
+                                          **kwargs)
 
         data[table_name] = metadata
 
@@ -279,7 +306,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
     return data
 
 
-def get_table_list(select=None, filters=None, catalog_url=None):
+def get_table_list(select=None, filters=None, catalog_url=None, **kwargs):
     """Get a list with the available tables.
 
     Parameters
@@ -290,6 +317,9 @@ def get_table_list(select=None, filters=None, catalog_url=None):
         Return only rows that agree on the filter.
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    **kwargs :
+        Optional arguments that ``requests.get()`` takes. For example,
+        `proxies`, `cert` and `verify`.
 
     Returns
     -------
@@ -316,13 +346,17 @@ def get_table_list(select=None, filters=None, catalog_url=None):
     if filters:
         params['$filter'] = _filters(filters)
 
+    # additional parameters to requests
+    request_kwargs = options.requests.copy()
+    request_kwargs.update(kwargs)
+
     try:
         s = Session()
         p = Request('GET', url, params=params).prepare()
 
         logging.info("Download " + p.url)
 
-        r = s.send(p)
+        r = s.send(p, **request_kwargs)
         r.raise_for_status()
         res = r.json()
 
@@ -334,7 +368,7 @@ def get_table_list(select=None, filters=None, catalog_url=None):
         )
 
 
-def get_info(table_id, catalog_url=None):
+def get_info(table_id, catalog_url=None, **kwargs):
     """Get information about a table.
 
     Parameters
@@ -343,6 +377,9 @@ def get_info(table_id, catalog_url=None):
         The identifier of the table.
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    **kwargs :
+        Optional arguments that ``requests.get()`` takes. For example,
+        `proxies`, `cert` and `verify`.
 
     Returns
     -------
@@ -353,7 +390,8 @@ def get_info(table_id, catalog_url=None):
     info_list = _download_metadata(
         table_id,
         "TableInfos",
-        catalog_url=_get_catalog_url(catalog_url)
+        catalog_url=_get_catalog_url(catalog_url),
+        **kwargs
     )
 
     if len(info_list) > 0:
@@ -362,7 +400,7 @@ def get_info(table_id, catalog_url=None):
         return None
 
 
-def get_meta(table_id, name, catalog_url=None):
+def get_meta(table_id, name, catalog_url=None, **kwargs):
     """Get the metadata of a table.
 
     Parameters
@@ -373,6 +411,9 @@ def get_meta(table_id, name, catalog_url=None):
         The name of the metadata (for example DataProperties).
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    **kwargs :
+        Optional arguments that ``requests.get()`` takes. For example,
+        `proxies`, `cert` and `verify`.
 
     Returns
     -------
@@ -381,12 +422,15 @@ def get_meta(table_id, name, catalog_url=None):
     """
 
     return _download_metadata(
-        table_id, name, catalog_url=_get_catalog_url(catalog_url)
+        table_id,
+        name,
+        catalog_url=_get_catalog_url(catalog_url),
+        **kwargs
     )
 
 
 def get_data(table_id, dir=None, typed=False, select=None, filters=None,
-             catalog_url=None):
+             catalog_url=None, **kwargs):
     """Get the CBS data table.
 
     Parameters
@@ -404,6 +448,9 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
         Return only rows that agree on the filter.
     catalog_url : str
         The url of the catalog. Default "opendata.cbs.nl".
+    **kwargs :
+        Optional arguments that ``requests.get()`` takes. For example,
+        `proxies`, `cert` and `verify`.
 
     Returns
     -------
@@ -413,9 +460,15 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
 
     _catalog_url = _get_catalog_url(catalog_url)
 
-    metadata = download_data(table_id, dir=dir, typed=typed,
-                             select=select, filters=filters,
-                             catalog_url=_catalog_url)
+    metadata = download_data(
+        table_id,
+        dir=dir,
+        typed=typed,
+        select=select,
+        filters=filters,
+        catalog_url=_catalog_url,
+        **kwargs
+    )
 
     if "TypedDataSet" in metadata.keys():
         data = metadata["TypedDataSet"]

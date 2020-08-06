@@ -1,13 +1,13 @@
 Statistics Netherlands opendata API client for Python
 =====================================================
 
-|pypi| |travis|
+|pypi| |tests|
 
 .. |pypi| image:: https://badge.fury.io/py/cbsodata.svg
     :target: https://badge.fury.io/py/cbsodata
 
-.. |travis| image:: https://travis-ci.org/J535D165/cbsodata.svg?branch=master
-    :target: https://travis-ci.org/J535D165/cbsodata
+.. |tests| image:: https://github.com/J535D165/cbsodata/workflows/tests/badge.svg
+    :target: https://github.com/J535D165/cbsodata/actions
 
 Retrieve data from the `open data interface of Statistics Netherlands
 <http://www.cbs.nl/nl-NL/menu/cijfers/statline/open-data/default.htm>`__
@@ -182,6 +182,54 @@ The list of tables can be turned into a pandas DataFrame as well.
 
     >>> tables = pandas.DataFrame(cbsodata.get_table_list())
     >>> tables.head()
+
+
+Command Line Interface
+----------------------
+
+This library ships with a Command Line Interface (CLI). 
+
+.. code:: bash 
+    
+    > cbsodata -h 
+    usage: cbsodata [-h] [--version] [subcommand]
+
+    CBS Open Data: Command Line Interface
+
+    positional arguments:
+      subcommand  the subcommand (one of 'data', 'info', 'list')
+
+    optional arguments:
+      -h, --help  show this help message and exit
+      --version   show the package version
+
+Download data:
+
+.. code:: bash 
+    
+    > cbsodata data 82010NED 
+    
+Retrieve table information:
+
+.. code:: bash 
+    
+    > cbsodata info 82010NED 
+
+Retrieve a list with all tables:
+
+.. code:: bash
+
+    > cbsodata list
+
+
+Export data
+~~~~~~~~~~~
+
+Use the flag ``-o`` to load data to a file (JSON lines). 
+
+.. code:: bash
+    
+    > cbsodata data 82010NED -o table_82010NED.jl
 
 
 Odata API Version 4
