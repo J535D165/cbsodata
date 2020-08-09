@@ -1,7 +1,7 @@
 import os
 import shutil
 
-import cbsodata4 as cbsodata
+import cbsodata.cbsodata4 as cbsodata
 # testing deps
 import pytest
 
@@ -12,7 +12,7 @@ datasets = [
 
 catalogs = [
     'CBS',
-    'CBS-Maatwerk'
+    'CBS-asd'
 ]
 
 TEST_ENV = 'test_env'
@@ -126,7 +126,7 @@ def test_dataset_measure_vars():
         top=10
     )
 
-    assert "MeasureGroupID" not in x[0].keys()
+    assert "MeasureGroupId" not in x[0].keys()
     assert "MeasureGroupDescription" in x[0].keys()
     assert "MeasureGroupTitle" not in x[0].keys()
 
@@ -136,7 +136,7 @@ def test_dataset_measure_vars():
         top=10
     )
 
-    assert "MeasureGroupID" in x[0].keys()
+    assert "MeasureGroupId" in x[0].keys()
 
 
 def test_dataset_drop_measure_id():
@@ -183,7 +183,7 @@ def test_dataset_dimension_vars():
         top=10
     )
 
-    assert "WijkenEnBuurtenGroupID" not in x[0].keys()
+    assert "WijkenEnBuurtenGroupId" not in x[0].keys()
     assert "WijkenEnBuurtenGroupDescription" in x[0].keys()
     assert "WijkenEnBuurtenGroupTitle" not in x[0].keys()
 
@@ -193,7 +193,7 @@ def test_dataset_dimension_vars():
         top=10
     )
 
-    assert "WijkenEnBuurtenGroupID" in x[0].keys()
+    assert "WijkenEnBuurtenGroupId" in x[0].keys()
 
 
 def test_dataset_drop_dimension_id():

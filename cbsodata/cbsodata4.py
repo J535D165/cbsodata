@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Jonathan de Bruin
+# Copyright (c) 2020 Jonathan de Bruin
 
 #  Permission is hereby granted, free of charge, to any person
 #  obtaining a copy of this software and associated documentation
@@ -20,19 +20,13 @@
 #  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #  OTHER DEALINGS IN THE SOFTWARE.
-
 """Statistics Netherlands opendata version 4 API client for Python"""
 
 __all__ = [
-    'options',
-    'get_data',
-    'get_dataset',
-    'get_dataset_info',
-    'get_dataset_list',
-    'get_catalog_info',
-    'get_catalog_list',
-    'get_metadata',
-    'get_observations']
+    'options', 'get_data', 'get_dataset', 'get_dataset_info',
+    'get_dataset_list', 'get_catalog_info', 'get_catalog_list', 'get_metadata',
+    'get_observations'
+]
 
 import copy
 import json
@@ -51,12 +45,9 @@ class OptionsManager(object):
     def __init__(self):
 
         # url of cbs odata4 service
-        self.odata_url = "http://beta.opendata.cbs.nl/OData4"
+        self.odata_url = "https://odata4.cbs.nl"
         self.catalog = "CBS"
         self.odata_version = "4"
-
-        # Enable in next version
-        # self.catalog_url = "opendata.cbs.nl"
 
     def __repr__(self):
         return self.__str__()
@@ -72,10 +63,8 @@ class OptionsManager(object):
         setattr(self, arg, value)
 
     def _log_setting_change(self, setting_name, old_value, new_value):
-        logging.info(
-            "Setting '{}' changed from '{}' to '{}'.".format(
-                setting_name, old_value, new_value)
-        )
+        logging.info("Setting '{}' changed from '{}' to '{}'.".format(
+            setting_name, old_value, new_value))
 
     def __getattr__(self, arg):
         return getattr(self, arg)
@@ -94,7 +83,28 @@ class OptionsManager(object):
 options = OptionsManager()
 
 
-def _download_request(url, params={}):
+def _get_catalog(catalog=None):
+    """Return the catalog.
+
+    Parameters
+    ----------
+    catalog : str
+        If not None, return the catalog. Else the catalog
+        in options.
+
+    Returns
+    -------
+    str
+        The catalog.
+    """
+    return _get_catalog(catalog)
+
+
+def _download_request(url, params={}, **kwargs):
+
+    # additional parameters to requests
+    request_kwargs = options.requests.copy()
+    request_kwargs.update(kwargs)
 
     try:
 
@@ -103,21 +113,27 @@ def _download_request(url, params={}):
 
         logging.info("Download " + p.url)
 
-        r = s.send(p)
+        r = s.send(p, **request_kwargs)
         r.raise_for_status()
 
         return r
 
     except requests.HTTPError as http_err:
         http_err.message = "Downloading metadata '{}' failed. {}".format(
-            p.url, str(http_err)
-        )
+            p.url, str(http_err))
 
         raise http_err
 
 
-def _parse_odata4_request(json_response, kind):
+def _parse_odata4_response(json_response, kind):
     """Parse Odata4 requests.
+
+    Parameters
+    ----------
+    json_response : requests.Response
+        The OData4 response to parse.
+    kind : str
+        Type of response: "Singleton" or "EntitySet".
 
     Returns
     -------
@@ -144,18 +160,23 @@ def _parse_odata4_request(json_response, kind):
         raise ValueError("Unknown kind '{}'.".format(kind))
 
 
-def _odata4_request(url, kind="EntitySet", params={}, follow_next_link=True):
-    """Make an Odata4 requests.
+def _odata4_request(url,
+                    kind="EntitySet",
+                    params={},
+                    follow_next_link=True,
+                    **kwargs):
+    """Make an Odata4 request.
     """
 
     # download the page
-    r = _download_request(url, params=params)
+    r = _download_request(url, params=params, **kwargs)
     res = r.json(encoding='utf-8')
 
-    data, next_link = _parse_odata4_request(res, kind)
+    data, next_link = _parse_odata4_response(res, kind)
 
     if kind == "EntitySet" and follow_next_link and next_link:
-        data_next = _odata4_request(next_link, kind=kind, params=params)
+        data_next = _odata4_request(
+            next_link, kind=kind, params=params, **kwargs)
         data.extend(data_next)
 
     return data
@@ -197,22 +218,26 @@ def _save_data(data, dir, metadata_name):
         ValueError("Unknown data type to export.")
 
 
-def download_dataset(dataset_id, catalog=None, params={},
-                     save_dir="tmp", include_metadata=True):
+def download_dataset(dataset_id,
+                     catalog=None,
+                     params={},
+                     save_dir="tmp",
+                     include_metadata=True,
+                     **kwargs):
     """Download the raw data package."""
 
     # https://beta.opendata.cbs.nl/OData4/CBS/83765NED/
 
-    catalog = options.catalog if catalog is None else catalog
+    catalog = _get_catalog(catalog)
     dataset_url = "{}/{}/{}/".format(options.odata_url, catalog, dataset_id)
 
     # download the page
-    res_index = _odata4_request(dataset_url, params=params)
+    res_index = _odata4_request(dataset_url, params=params, **kwargs)
     _save_data(res_index, save_dir, "index")
 
     # download metadata xml
     if include_metadata:
-        metadata_url = "{}/$metadata".format(dataset_url)
+        metadata_url = "{}$metadata".format(dataset_url)
         xml_metadata = _download_request(metadata_url)
         fp = os.path.join(save_dir, 'metadata.xml')
         with open(fp, "w", encoding="utf-8") as f:
@@ -226,7 +251,8 @@ def download_dataset(dataset_id, catalog=None, params={},
         res_meta = _odata4_request(
             metadata_url,
             kind=metadata_object['kind'],
-            params=params)
+            params=params,
+            **kwargs)
         _save_data(res_meta, save_dir, metadata_object['url'])
 
 
@@ -250,7 +276,7 @@ def get_metadata(dataset_id, catalog=None):
         A dictionary with the (meta)data of the table
     """
 
-    catalog = options.catalog if catalog is None else catalog
+    catalog = _get_catalog(catalog)
 
     dataset_url = "{}/{}/{}/".format(options.odata_url, catalog, dataset_id)
     dataset_odata_meta_list = _odata4_request(dataset_url)
@@ -268,16 +294,13 @@ def get_metadata(dataset_id, catalog=None):
 
             metadata_url = dataset_url + metadata_object['url']
             metadata_table = _odata4_request(
-                metadata_url,
-                kind=metadata_object['kind']
-            )
+                metadata_url, kind=metadata_object['kind'])
             metadata[metadata_object['name']] = metadata_table
 
     return metadata
 
 
-def get_observations(table_id, catalog=None, filter=None,
-                     top=None, skip=None):
+def get_observations(table_id, catalog=None, filter=None, top=None, skip=None):
     """Get the observation of the dataset.
 
     Parameters
@@ -302,13 +325,10 @@ def get_observations(table_id, catalog=None, filter=None,
     list
         A dictionary with the observations.
     """
-    catalog = options.catalog if catalog is None else catalog
+    catalog = _get_catalog(catalog)
 
-    observations_url = "{}/{}/{}/Observations".format(
-        options.odata_url,
-        catalog,
-        table_id
-    )
+    observations_url = "{}/{}/{}/Observations".format(options.odata_url,
+                                                      catalog, table_id)
     payload = {"$filter": filter} if filter else {}
 
     if top is not None:
@@ -316,11 +336,7 @@ def get_observations(table_id, catalog=None, filter=None,
     if skip is not None:
         payload["$skip"] = skip
 
-    return _odata4_request(
-        observations_url,
-        kind="EntitySet",
-        params=payload
-    )
+    return _odata4_request(observations_url, kind="EntitySet", params=payload)
 
 
 def get_data(dataset_id,
@@ -413,7 +429,7 @@ def get_data(dataset_id,
       'Perioden': '2007KW01',
       'MeasureTitle': 'Totaal bedrijven',
       'MeasureDataType': 'Long',
-      'MeasureGroupID': None,
+      'MeasureGroupId': None,
       'BedrijfstakkenBranchesSBI2008Title': 'A-U Alle economische ...',
       'BedrijfstakkenBranchesSBI2008GroupTitle': 'Totaal',
       'PeriodenTitle': '2007 1e kwartaal',
@@ -436,16 +452,10 @@ def get_data(dataset_id,
     """
 
     observations = get_observations(
-        dataset_id,
-        catalog,
-        filter=filter,
-        top=top,
-        skip=skip
-    )
+        dataset_id, catalog, filter=filter, top=top, skip=skip)
 
     # add codes
-    meta = get_metadata(dataset_id,
-                        catalog=catalog)
+    meta = get_metadata(dataset_id, catalog=catalog)
 
     def _lookup_dict(d, meta, key, drop_key=True):
         r = dict(d, **meta.get(d[key], {}))
@@ -465,37 +475,40 @@ def get_data(dataset_id,
 
             # include all measure_vars with the name "Measure"
             # as a prefix
-            temp_meas_dict = {
-                "Measure" + k: d[k] for k in measure_vars
-            }
+            temp_meas_dict = {"Measure" + k: d[k] for k in measure_vars}
 
             # if there are group variables to include, we need the
-            # MeasureGroupID.
+            # MeasureGroupId.
             if measure_group_vars:
-                temp_meas_dict["MeasureGroupID"] = d["MeasureGroupID"]
+                temp_meas_dict["MeasureGroupId"] = d["MeasureGroupId"]
 
             # update the dict
             code_meas_meta_dict[d["Identifier"]] = temp_meas_dict
 
         observations = [
-            _lookup_dict(d, code_meas_meta_dict, "Measure",
-                         drop_key=not include_measure_code_id)
-            for d in observations
+            _lookup_dict(
+                d,
+                code_meas_meta_dict,
+                "Measure",
+                drop_key=not include_measure_code_id) for d in observations
         ]
 
         # measure groups
         if "MeasureGroups" in meta.keys() and measure_group_vars:
             group_meta_dict = {
-                d["ID"]: {"MeasureGroup" + k: d[k] for k in measure_group_vars}
-                for d in meta["MeasureGroups"]}
+                d["Id"]:
+                {"MeasureGroup" + k: d[k]
+                 for k in measure_group_vars}
+                for d in meta["MeasureGroups"]
+            }
             observations = [
                 _lookup_dict(
                     d,
                     group_meta_dict,
-                    "MeasureGroupID",
-                    drop_key=not include_measure_group_id
-                )
-                for d in observations]
+                    "MeasureGroupId",
+                    drop_key=not include_measure_group_id)
+                for d in observations
+            ]
     elif not (measure_vars or measure_group_vars) and \
             not include_measure_code_id:
         observations = [_drop_key_value(d, "Measure") for d in observations]
@@ -515,20 +528,21 @@ def get_data(dataset_id,
 
                 # include all dimension_vars with the name of the dimension
                 # as a prefix
-                temp_dim_dict = {
-                    dim + k: d[k] for k in dimension_vars
-                }
+                temp_dim_dict = {dim + k: d[k] for k in dimension_vars}
 
-                # if there are group variables to include, we need the GroupID.
+                # if there are group variables to include, we need the GroupId.
                 if dimension_group_vars:
-                    temp_dim_dict[dim + "GroupID"] = d["DimensionGroupID"]
+                    temp_dim_dict[dim + "GroupId"] = d["DimensionGroupId"]
 
                 code_dim_meta_dict[d["Identifier"]] = temp_dim_dict
 
             # Update the observations
             observations = [
-                _lookup_dict(d, code_dim_meta_dict, key=dim,
-                             drop_key=not include_dimension_code_id)
+                _lookup_dict(
+                    d,
+                    code_dim_meta_dict,
+                    key=dim,
+                    drop_key=not include_dimension_code_id)
                 for d in observations
             ]
 
@@ -540,18 +554,18 @@ def get_data(dataset_id,
 
                 if meta_group_name in meta.keys():
                     group_meta_dict = {
-                        d["ID"]: {
+                        d["Id"]: {
                             dim + "Group" + k: d[k]
                             for k in dimension_group_vars
                         }
-                        for d in meta[meta_group_name]}
+                        for d in meta[meta_group_name]
+                    }
                     observations = [
                         _lookup_dict(
                             d,
                             group_meta_dict,
-                            dim + "GroupID",
-                            drop_key=not include_dimension_group_id
-                        )
+                            dim + "GroupId",
+                            drop_key=not include_dimension_group_id)
                         for d in observations
                     ]
 
@@ -580,9 +594,7 @@ def get_catalog_list():
     list
         A list with the description of catalogs."""
 
-    catalog_url = "{}/Catalogs".format(
-        options.odata_url
-    )
+    catalog_url = "{}/Catalogs".format(options.odata_url)
     return _odata4_request(catalog_url)
 
 
@@ -603,10 +615,7 @@ def get_catalog_info(catalog):
     """
 
     try:
-        catalog_url = "{}/Catalogs/{}".format(
-            options.odata_url,
-            catalog
-        )
+        catalog_url = "{}/Catalogs/{}".format(options.odata_url, catalog)
 
         return _odata4_request(catalog_url, kind="Singleton")
 
@@ -619,15 +628,9 @@ def get_catalog_info(catalog):
         if catalog_is_dataset:
             raise ValueError(
                 "Catalog '{}' seems to be a dataset identifier.".format(
-                    catalog
-                )
-            )
+                    catalog))
         elif err.response.status_code == 404:
-            raise ValueError(
-                "Catalog '{}' not found.".format(
-                    catalog
-                )
-            )
+            raise ValueError("Catalog '{}' not found.".format(catalog))
         else:
             raise err
 
@@ -649,10 +652,7 @@ def get_dataset_list(catalog=None):
     """
 
     catalog = "" if catalog is None else catalog
-    catalog_url = "{}/{}/Datasets".format(
-        options.odata_url,
-        catalog
-    )
+    catalog_url = "{}/{}/Datasets".format(options.odata_url, catalog)
     return _odata4_request(catalog_url)
 
 
@@ -676,13 +676,9 @@ def get_dataset_info(dataset_id, catalog=None):
         A dictionary with the description of the dataset.
     """
 
-    catalog = options.catalog if catalog is None else catalog
+    catalog = _get_catalog(catalog)
 
-    url = "{}/{}/{}/Properties".format(
-        options.odata_url,
-        catalog,
-        dataset_id
-    )
+    url = "{}/{}/{}/Properties".format(options.odata_url, catalog, dataset_id)
 
     return _odata4_request(url, kind="Singleton")
 
@@ -694,7 +690,7 @@ def catalog(catalog):
     Parameters
     ----------
     catalog : str
-        The catalog. For example: 'CBS' or 'CBS-Maatwerk'.
+        The catalog. For example: 'CBS' or 'CBS-asd'.
 
     """
 
