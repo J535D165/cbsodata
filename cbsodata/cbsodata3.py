@@ -172,8 +172,9 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
 
             r = s.send(p, **request_kwargs)
             r.raise_for_status()
+            r.encoding = "utf-8"
 
-            res = r.json(encoding='utf-8')
+            res = json.loads(r.text)
             data.extend(res['value'])
 
             try:
