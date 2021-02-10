@@ -81,13 +81,6 @@ class OptionsManager(object):
                 setting_name, old_value, new_value)
         )
 
-    def __getattr__(self, arg):
-        try:
-            return self.__dict__[arg]
-        except KeyError:
-            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, arg))
-
-
     def __setattr__(self, arg, value):
         try:
             old_value = copy.copy(getattr(self, arg))
