@@ -1,7 +1,6 @@
 # Statistics Netherlands opendata API client for Python
 
 [![pypi](https://badge.fury.io/py/cbsodata.svg)](https://badge.fury.io/py/cbsodata)
-[![tests](https://github.com/J535D165/cbsodata/workflows/tests/badge.svg)](https://github.com/J535D165/cbsodata/actions)
 
 Retrieve data from the [open data interface of Statistics
 Netherlands](http://www.cbs.nl/nl-NL/menu/cijfers/statline/open-data/default.htm)
