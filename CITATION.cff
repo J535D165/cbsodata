@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: >-
+  cbsodata - Statistics Netherlands opendata API client for
+  Python
+message: 'We appreciate, but do not require, attribution.'
+type: software
+authors:
+  - family-names: De Bruin
+    given-names: Jonathan
+    orcid: 'https://orcid.org/0000-0002-4297-0502'
+repository-code: 'https://github.com/J535D165/cbsodata'
+url: 'https://github.com/J535D165/cbsodata'
+repository-artifact: 'https://pypi.org/project/cbsodata/'
+keywords:
+  - census-data
+  - national-statistics
+  - census
+  - dataset
+  - open-data
+  - netherlands
+license: MIT
