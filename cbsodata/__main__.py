@@ -72,8 +72,7 @@ def text_outputter(data_obj, max_rows=None):
     col_line = ""
     for i, col in enumerate(columns):
         if i != (len(columns) - 1):
-            col_line = col_line + str(col) \
-                .upper().ljust(value_max_len[col] + 2)
+            col_line = col_line + str(col).upper().ljust(value_max_len[col] + 2)
         else:
             col_line = col_line + str(col).upper()
     print(col_line)
@@ -96,11 +95,7 @@ def text_outputter(data_obj, max_rows=None):
 
 
 def parse_argument_table_id(parser):
-    parser.add_argument(
-        "table_id",
-        type=str,
-        help="table identifier"
-    )
+    parser.add_argument("table_id", type=str, help="table identifier")
 
 
 def parse_argument_catalog(parser):
@@ -108,43 +103,49 @@ def parse_argument_catalog(parser):
         "--catalog_url",
         default=None,
         type=str,
-        help="the catalog to download the data from")
+        help="the catalog to download the data from",
+    )
 
 
 def parse_argument_output_format(parser):
     parser.add_argument(
-        "--output_format", "-f",
+        "--output_format",
+        "-f",
         default="json",
         type=str,
-        help="format to show table ('json', 'text')")
+        help="format to show table ('json', 'text')",
+    )
 
 
 def parse_argument_output(parser):
     parser.add_argument(
-        "--output_file", "-o",
+        "--output_file",
+        "-o",
         default=None,
         type=str,
-        help="file to store the output (only json support)")
+        help="file to store the output (only json support)",
+    )
 
 
 def parse_argument_max_rows(parser):
     parser.add_argument(
-        "--max_rows", "-n",
+        "--max_rows",
+        "-n",
         default=100,
         type=int,
-        help="maximum number of rows to output")
+        help="maximum number of rows to output",
+    )
 
 
 def save_list_to_json(data_obj, fp):
     """Write list with dicts to json"""
 
-    with open(fp, 'w+') as f:
+    with open(fp, "w+") as f:
         for line in data_obj:
             f.write(json.dumps(line) + "\n")
 
 
 def main():
-
     if len(sys.argv) > 1 and sys.argv[1] == "data":
         parser = argparse.ArgumentParser(
             prog="cbsodata",
@@ -152,7 +153,7 @@ def main():
                 CBS Open Data: Command Line Interface
 
                 Get data by table identifier.
-            """
+            """,
         )
         parse_argument_table_id(parser)
         parse_argument_catalog(parser)
@@ -178,7 +179,7 @@ def main():
                 CBS Open Data: Command Line Interface
 
                 Get data infomation by table identifier.
-            """
+            """,
         )
         parse_argument_table_id(parser)
         parse_argument_catalog(parser)
@@ -189,13 +190,11 @@ def main():
         result = cbsodata.get_info(args.table_id, catalog_url=args.catalog_url)
 
         if args.output_file:
-            with open(args.output_file, 'w') as f:
+            with open(args.output_file, "w") as f:
                 json.dump(result, f, indent=4)
 
         if args.output_format == "text":
-            text_outputter(
-                [{"Label": k, "Value": v} for k, v in result.items()]
-            )
+            text_outputter([{"Label": k, "Value": v} for k, v in result.items()])
         else:
             print(json.dumps(result, indent=4))
 
@@ -206,7 +205,7 @@ def main():
                 CBS Open Data: Command Line Interface
 
                 Get list of available tables.
-            """
+            """,
         )
         parse_argument_catalog(parser)
         parse_argument_output_format(parser)
@@ -230,19 +229,17 @@ def main():
             prog="cbsodata",
             description="""
                 CBS Open Data: Command Line Interface
-            """
+            """,
         )
         parser.add_argument(
             "subcommand",
             nargs="?",
             type=lambda x: isinstance(x, str) and x in AVAILABLE_CMDS,
-            help="the subcommand (one of '{}')".format(
-                "', '".join(AVAILABLE_CMDS))
+            help="the subcommand (one of '{}')".format("', '".join(AVAILABLE_CMDS)),
         )
         parser.add_argument(
-            "--version",
-            action='store_true',
-            help="show the package version")
+            "--version", action="store_true", help="show the package version"
+        )
 
         args = parser.parse_args()
 
@@ -250,5 +247,5 @@ def main():
             parser.print_help()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -23,19 +23,26 @@
 
 """Statistics Netherlands opendata API client for Python"""
 
-__all__ = ['download_data', 'get_data', 'get_info', 'get_meta',
-           'get_table_list', 'options', 'catalog']
+__all__ = [
+    "download_data",
+    "get_data",
+    "get_info",
+    "get_meta",
+    "get_table_list",
+    "options",
+    "catalog",
+]
 
-import os
-import json
 import copy
+import json
 import logging
+import os
 import warnings
 from contextlib import contextmanager
 
 import requests
-from requests import Session, Request
-
+from requests import Request
+from requests import Session
 
 CBSOPENDATA = "opendata.cbs.nl"  # deprecate in next version
 API = "ODataApi/odata"
@@ -45,11 +52,10 @@ CATALOG = "ODataCatalog"
 FORMAT = "json"
 
 
-class OptionsManager(object):
+class OptionsManager:
     """Class for option management"""
 
     def __init__(self):
-
         self.use_https = True
         self.api_version = "3"
         # Get default proxy settings from environment variables
@@ -66,8 +72,7 @@ class OptionsManager(object):
         return self.__str__()
 
     def __str__(self):
-        return "catalog_url = {}, use_https = {}".format(
-            self.catalog_url, self.use_https)
+        return f"catalog_url = {self.catalog_url}, use_https = {self.use_https}"
 
     def __getitem__(self, arg):
         return getattr(self, arg)
@@ -77,8 +82,7 @@ class OptionsManager(object):
 
     def _log_setting_change(self, setting_name, old_value, new_value):
         logging.info(
-            "Setting '{}' changed from '{}' to '{}'.".format(
-                setting_name, old_value, new_value)
+            f"Setting '{setting_name}' changed from '{old_value}' to '{new_value}'."
         )
 
     def __setattr__(self, arg, value):
@@ -88,7 +92,7 @@ class OptionsManager(object):
             old_value = "undefined"
 
         self._log_setting_change(arg, old_value, value)
-        super(OptionsManager, self).__setattr__(arg, value)
+        super().__setattr__(arg, value)
 
     @property
     def catalog_url(self):
@@ -101,15 +105,16 @@ class OptionsManager(object):
 
     @property
     def proxies(self):
-        return self.requests.get('proxies', None)
+        return self.requests.get("proxies", None)
 
     @proxies.setter
     def proxies(self, proxies):
         warnings.warn(
             "Deprecated, use options.requests['proxies'] instead",
-            DeprecationWarning
+            DeprecationWarning,
+            stacklevel=2,
         )
-        self.requests['proxies'] = proxies
+        self.requests["proxies"] = proxies
 
 
 # User options
@@ -117,7 +122,6 @@ options = OptionsManager()
 
 
 def _get_catalog_url(url):
-
     return options.catalog_url if url is None else url
 
 
@@ -129,17 +133,20 @@ def _get_table_url(table_id, catalog_url=None):
     else:
         _catalog_url = catalog_url
 
-    components = {"http": "https://" if options.use_https else "http://",
-                  "baseurl": _catalog_url,
-                  "bulk": BULK,
-                  "table_id": table_id}
+    components = {
+        "http": "https://" if options.use_https else "http://",
+        "baseurl": _catalog_url,
+        "bulk": BULK,
+        "table_id": table_id,
+    }
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm
     return "{http}{baseurl}/{bulk}/{table_id}/".format(**components)
 
 
-def _download_metadata(table_id, metadata_name, select=None, filters=None,
-                       catalog_url=None, **kwargs):
+def _download_metadata(
+    table_id, metadata_name, select=None, filters=None, catalog_url=None, **kwargs
+):
     """Download metadata."""
 
     # http://opendata.cbs.nl/ODataApi/OData/37506wwm/UntypedDataSet?$format=json
@@ -149,9 +156,9 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
     params["$format"] = FORMAT
 
     if select:
-        params['$select'] = _select(select)
+        params["$select"] = _select(select)
     if filters:
-        params['$filter'] = _filters(filters)
+        params["$filter"] = _filters(filters)
 
     # additional parameters to requests
     request_kwargs = options.requests.copy()
@@ -160,10 +167,9 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
     try:
         data = []
 
-        while (url is not None):
-
+        while url is not None:
             s = Session()
-            p = Request('GET', url, params=params).prepare()
+            p = Request("GET", url, params=params).prepare()
 
             logging.info("Download " + p.url)
 
@@ -172,10 +178,10 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
             r.encoding = "utf-8"
 
             res = json.loads(r.text)
-            data.extend(res['value'])
+            data.extend(res["value"])
 
             try:
-                url = res['odata.nextLink']
+                url = res["odata.nextLink"]
                 params = {}
             except KeyError:
                 url = None
@@ -184,8 +190,8 @@ def _download_metadata(table_id, metadata_name, select=None, filters=None,
 
     except requests.HTTPError as http_err:
         raise requests.HTTPError(
-            "Downloading table '{}' failed. {}".format(table_id, str(http_err))
-        )
+            f"Downloading table '{table_id}' failed. {str(http_err)}"
+        ) from http_err
 
 
 def _save_data(data, dir, metadata_name):
@@ -194,9 +200,9 @@ def _save_data(data, dir, metadata_name):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-    fp = os.path.join(dir, metadata_name + '.json')
+    fp = os.path.join(dir, metadata_name + ".json")
 
-    with open(fp, 'w') as output_file:
+    with open(fp, "w") as output_file:
         json.dump(data, output_file, indent=2)
 
 
@@ -232,13 +238,20 @@ def _select(select):
     """
 
     if isinstance(select, list):
-        select = ','.join(select)
+        select = ",".join(select)
 
     return select
 
 
-def download_data(table_id, dir=None, typed=False, select=None, filters=None,
-                  catalog_url=None, **kwargs):
+def download_data(
+    table_id,
+    dir=None,
+    typed=False,
+    select=None,
+    filters=None,
+    catalog_url=None,
+    **kwargs,
+):
     """Download the CBS data and metadata.
 
     Parameters
@@ -274,7 +287,7 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
     )
 
     # The names of the tables with metadata
-    metadata_table_names = [table['name'] for table in metadata_tables]
+    metadata_table_names = [table["name"] for table in metadata_tables]
 
     # Download only the typed or untyped data
     typed_or_not_str = "TypedDataSet" if typed else "UntypedDataSet"
@@ -283,17 +296,20 @@ def download_data(table_id, dir=None, typed=False, select=None, filters=None,
     data = {}
 
     for table_name in metadata_table_names:
-
         # download table
         if table_name in ["TypedDataSet", "UntypedDataSet"]:
-            metadata = _download_metadata(table_id, table_name,
-                                          select=select, filters=filters,
-                                          catalog_url=_catalog_url,
-                                          **kwargs)
+            metadata = _download_metadata(
+                table_id,
+                table_name,
+                select=select,
+                filters=filters,
+                catalog_url=_catalog_url,
+                **kwargs,
+            )
         else:
-            metadata = _download_metadata(table_id, table_name,
-                                          catalog_url=_catalog_url,
-                                          **kwargs)
+            metadata = _download_metadata(
+                table_id, table_name, catalog_url=_catalog_url, **kwargs
+            )
 
         data[table_name] = metadata
 
@@ -332,17 +348,19 @@ def get_table_list(select=None, filters=None, catalog_url=None, **kwargs):
 
     _catalog_url = _get_catalog_url(catalog_url)
 
-    components = {"http": "https://" if options.use_https else "http://",
-                  "baseurl": _catalog_url,
-                  "catalog": CATALOG}
+    components = {
+        "http": "https://" if options.use_https else "http://",
+        "baseurl": _catalog_url,
+        "catalog": CATALOG,
+    }
 
     url = "{http}{baseurl}/{catalog}/Tables?$format=json".format(**components)
 
     params = {}
     if select:
-        params['$select'] = _select(select)
+        params["$select"] = _select(select)
     if filters:
-        params['$filter'] = _filters(filters)
+        params["$filter"] = _filters(filters)
 
     # additional parameters to requests
     request_kwargs = options.requests.copy()
@@ -350,7 +368,7 @@ def get_table_list(select=None, filters=None, catalog_url=None, **kwargs):
 
     try:
         s = Session()
-        p = Request('GET', url, params=params).prepare()
+        p = Request("GET", url, params=params).prepare()
 
         logging.info("Download " + p.url)
 
@@ -358,12 +376,12 @@ def get_table_list(select=None, filters=None, catalog_url=None, **kwargs):
         r.raise_for_status()
         res = r.json()
 
-        return res['value']
+        return res["value"]
 
     except requests.HTTPError as http_err:
         raise requests.HTTPError(
-            "Downloading table list failed. {}".format(str(http_err))
-        )
+            f"Downloading table list failed. {str(http_err)}"
+        ) from http_err
 
 
 def get_info(table_id, catalog_url=None, **kwargs):
@@ -386,10 +404,7 @@ def get_info(table_id, catalog_url=None, **kwargs):
     """
 
     info_list = _download_metadata(
-        table_id,
-        "TableInfos",
-        catalog_url=_get_catalog_url(catalog_url),
-        **kwargs
+        table_id, "TableInfos", catalog_url=_get_catalog_url(catalog_url), **kwargs
     )
 
     if len(info_list) > 0:
@@ -420,15 +435,19 @@ def get_meta(table_id, name, catalog_url=None, **kwargs):
     """
 
     return _download_metadata(
-        table_id,
-        name,
-        catalog_url=_get_catalog_url(catalog_url),
-        **kwargs
+        table_id, name, catalog_url=_get_catalog_url(catalog_url), **kwargs
     )
 
 
-def get_data(table_id, dir=None, typed=False, select=None, filters=None,
-             catalog_url=None, **kwargs):
+def get_data(
+    table_id,
+    dir=None,
+    typed=False,
+    select=None,
+    filters=None,
+    catalog_url=None,
+    **kwargs,
+):
     """Get the CBS data table.
 
     Parameters
@@ -465,7 +484,7 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
         select=select,
         filters=filters,
         catalog_url=_catalog_url,
-        **kwargs
+        **kwargs,
     )
 
     if "TypedDataSet" in metadata.keys():
@@ -474,22 +493,23 @@ def get_data(table_id, dir=None, typed=False, select=None, filters=None,
         data = metadata["UntypedDataSet"]
 
     exclude = [
-        "TableInfos", "TypedDataSet", "UntypedDataSet",
-        "DataProperties", "CategoryGroups"
+        "TableInfos",
+        "TypedDataSet",
+        "UntypedDataSet",
+        "DataProperties",
+        "CategoryGroups",
     ]
 
     norm_cols = list(set(metadata.keys()) - set(exclude))
 
     for norm_col in norm_cols:
-        metadata[norm_col] = {r['Key']: r for r in metadata[norm_col]}
+        metadata[norm_col] = {r["Key"]: r for r in metadata[norm_col]}
 
     for i in range(0, len(data)):
-
         for norm_col in norm_cols:
-
             try:
                 v = data[i][norm_col]
-                data[i][norm_col] = metadata[norm_col][v]['Title']
+                data[i][norm_col] = metadata[norm_col][v]["Title"]
             except KeyError:
                 pass
 
