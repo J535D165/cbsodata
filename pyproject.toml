@@ -27,6 +27,10 @@ cbs = "cbsodata.__main__:main"
 lint = ["ruff"]
 test = ["pytest"]
 
+[project.urls]
+Homepage = "https://github.com/J535D165/cbsodata"
+Documentation = "http://cbsodata.readthedocs.io/"
+
 [build-system]
 build-backend = 'setuptools.build_meta'
 requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
