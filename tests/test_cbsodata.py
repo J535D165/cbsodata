@@ -1,7 +1,5 @@
-import os
-import shutil
+from pathlib import Path
 
-# testing deps
 import pytest
 import requests
 
@@ -11,36 +9,17 @@ datasets = ["82010NED", "80884ENG"]
 
 datasets_derden = ["47003NED", "47005NED"]
 
-TEST_ENV = "test_env"
-
-
-def setup_module(module):
-    print("\nsetup_module()")
-
-    if not os.path.exists(TEST_ENV):
-        os.makedirs(TEST_ENV)
-
-
-def teardown_module(module):
-    print("teardown_module()")
-
-    shutil.rmtree(TEST_ENV)
-
-
-# Tests
-
 
 @pytest.mark.parametrize("table_id", datasets)
 def test_info(table_id):
-    # testing
     info = cbsodata.get_info(table_id)
 
     assert isinstance(info, dict)
 
 
 @pytest.mark.parametrize("table_id", datasets)
-def test_download(table_id):
-    cbsodata.download_data(table_id)
+def test_download(table_id, tmpdir):
+    cbsodata.download_data(table_id, dir=tmpdir)
 
 
 @pytest.mark.parametrize("table_id", ["00000AAA"])
@@ -63,19 +42,19 @@ def test_http_error_table_list():
 
 
 @pytest.mark.parametrize("table_id", datasets)
-def test_http_https_download(table_id):
+def test_http_https_download(table_id, tmpdir):
     cbsodata.options["use_https"] = True
-    cbsodata.download_data(table_id)
+    cbsodata.download_data(table_id, dir=tmpdir)
     cbsodata.options["use_https"] = False
-    cbsodata.download_data(table_id)
+    cbsodata.download_data(table_id, dir=tmpdir)
     cbsodata.options["use_https"] = True
 
 
 @pytest.mark.parametrize("table_id", datasets)
-def test_download_and_store(table_id):
-    cbsodata.download_data(table_id, dir=os.path.join(TEST_ENV, table_id))
+def test_download_and_store(table_id, tmpdir):
+    cbsodata.download_data(table_id, dir=tmpdir)
 
-    assert os.path.exists(os.path.join(TEST_ENV, table_id, "TableInfos.json"))
+    assert Path(tmpdir, "TableInfos.json").exists()
 
 
 @pytest.mark.parametrize("table_id", datasets)
