@@ -119,6 +119,45 @@ your file system.
 >>> data = cbsodata.get_data('82070ENG', dir="dir_to_save_data")
 ```
 
+It is possible restrict the download using filter and select statements. 
+This may shorten the download time considerably.
+The code below downloads the number of inhabitants in the Dutch municipalities - 
+ignoring all other characteristics and data on neighbourhood level.
+
+``` python
+>>> data = cbsodata.get_data(
+...     table_id="85984NED",
+...     filters="startswith(WijkenEnBuurten,'GM')",
+...     select=["WijkenEnBuurten", "Gemeentenaam_1", "SoortRegio_2", "AantalInwoners_5"]
+... )
+>>> len(data)
+342
+```
+
+The code below downloads the data for fruit farming regions for the years 2000 and 2010 only:
+
+``` python
+>>> cbsodata.get_data(
+...     table_id="71509ENG",
+...     filters="Periods eq '2010JJ00' or substringof('2000', Periods)",
+...     select=["FruitFarmingRegions", "Periods", "TotalAppleVarieties_1"] 
+... )
+[{'FruitFarmingRegions': 'Total Netherlands', 
+  'Periods': '2000', 
+  'TotalAppleVarieties_1': 461}, 
+ {'FruitFarmingRegions': 'Total Netherlands', 
+  'Periods': '2010', 
+  'TotalAppleVarieties_1': 334}, 
+ {'FruitFarmingRegions': 'Region North', 
+  'Periods': '2000', 
+  'TotalAppleVarieties_1': 87}, 
+ {'FruitFarmingRegions': 'Region North', 
+  'Periods': '2010', 
+  'TotalAppleVarieties_1': 49}, 
+ # ...
+]
+```
+
 ### Catalogs (dataderden)
 
 There are multiple ways to retrieve data from catalogs other than
