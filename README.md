@@ -119,6 +119,76 @@ your file system.
 >>> data = cbsodata.get_data('82070ENG', dir="dir_to_save_data")
 ```
 
+### Filter data
+
+It is possible restrict the download using filter and select statements.
+This may shorten the download time considerably.
+Filtering can only be done on columns available in the metadata.
+For example, for the dataset with id `71509ENG` only the columns `FruitFarmingRegions` and `Periods` are available for filtering:
+
+``` python
+>>> [x["name"] for x in cbsodata.get_meta("71509ENG", "")]
+['TableInfos', 'UntypedDataSet', 'TypedDataSet', 'DataProperties', 'CategoryGroups', 'FruitFarmingRegions', 'Periods']
+```
+
+Subsequently one can filter on the `Key` related to these columns. The `Key` can
+be found as follows:
+
+``` python
+>>> cbsodata.get_meta("71509ENG", "Periods")
+[{'Key': '1997JJ00',
+  'Title': '1997',
+  'Description': None,
+  'Status': 'Definitief'},
+ {'Key': '1998JJ00',
+  'Title': '1998',
+  'Description': None,
+  'Status': 'Definitief'},
+ {'Key': '1999JJ00',
+  'Title': '1999',
+  'Description': None,
+  'Status': 'Definitief'},
+ # ...
+]
+```
+
+The code to download the data for fruit farming regions for the years 2000 and 2010 then could look as follows:
+
+``` python
+>>> cbsodata.get_data(
+...     table_id="71509ENG",
+...     filters="Periods eq '2010JJ00' or substringof('2000', Periods)",
+...     select=["FruitFarmingRegions", "Periods", "TotalAppleVarieties_1"]
+... )
+[{'FruitFarmingRegions': 'Total Netherlands',
+  'Periods': '2000',
+  'TotalAppleVarieties_1': 461},
+ {'FruitFarmingRegions': 'Total Netherlands',
+  'Periods': '2010',
+  'TotalAppleVarieties_1': 334},
+ {'FruitFarmingRegions': 'Region North',
+  'Periods': '2000',
+  'TotalAppleVarieties_1': 87},
+ {'FruitFarmingRegions': 'Region North',
+  'Periods': '2010',
+  'TotalAppleVarieties_1': 49},
+ # ...
+]
+```
+
+As another example, the code below downloads the number of inhabitants in the Dutch municipalities -
+ignoring all other characteristics and data on neighbourhood level.
+
+``` python
+>>> data = cbsodata.get_data(
+...     table_id="85984NED",
+...     filters="startswith(WijkenEnBuurten,'GM')",
+...     select=["WijkenEnBuurten", "Gemeentenaam_1", "SoortRegio_2", "AantalInwoners_5"]
+... )
+>>> len(data) # number of municipalities
+342
+```
+
 ### Catalogs (dataderden)
 
 There are multiple ways to retrieve data from catalogs other than
