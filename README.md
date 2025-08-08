@@ -121,9 +121,9 @@ your file system.
 
 ### Filter data
 
-It is possible restrict the download using filter and select statements. 
+It is possible restrict the download using filter and select statements.
 This may shorten the download time considerably.
-Filtering can only be done on columns available in the metadata. 
+Filtering can only be done on columns available in the metadata.
 For example, for the dataset with id `71509ENG` only the columns `FruitFarmingRegions` and `Periods` are available for filtering:
 
 ``` python
@@ -136,18 +136,18 @@ be found as follows:
 
 ``` python
 >>> cbsodata.get_meta("71509ENG", "Periods")
-[{'Key': '1997JJ00', 
-  'Title': '1997', 
-  'Description': None, 
-  'Status': 'Definitief'}, 
- {'Key': '1998JJ00', 
-  'Title': '1998', 
-  'Description': None, 
-  'Status': 'Definitief'}, 
- {'Key': '1999JJ00', 
-  'Title': '1999', 
-  'Description': None, 
-  'Status': 'Definitief'}, 
+[{'Key': '1997JJ00',
+  'Title': '1997',
+  'Description': None,
+  'Status': 'Definitief'},
+ {'Key': '1998JJ00',
+  'Title': '1998',
+  'Description': None,
+  'Status': 'Definitief'},
+ {'Key': '1999JJ00',
+  'Title': '1999',
+  'Description': None,
+  'Status': 'Definitief'},
  # ...
 ]
 ```
@@ -158,25 +158,25 @@ The code to download the data for fruit farming regions for the years 2000 and 2
 >>> cbsodata.get_data(
 ...     table_id="71509ENG",
 ...     filters="Periods eq '2010JJ00' or substringof('2000', Periods)",
-...     select=["FruitFarmingRegions", "Periods", "TotalAppleVarieties_1"] 
+...     select=["FruitFarmingRegions", "Periods", "TotalAppleVarieties_1"]
 ... )
-[{'FruitFarmingRegions': 'Total Netherlands', 
-  'Periods': '2000', 
-  'TotalAppleVarieties_1': 461}, 
- {'FruitFarmingRegions': 'Total Netherlands', 
-  'Periods': '2010', 
-  'TotalAppleVarieties_1': 334}, 
- {'FruitFarmingRegions': 'Region North', 
-  'Periods': '2000', 
-  'TotalAppleVarieties_1': 87}, 
- {'FruitFarmingRegions': 'Region North', 
-  'Periods': '2010', 
-  'TotalAppleVarieties_1': 49}, 
+[{'FruitFarmingRegions': 'Total Netherlands',
+  'Periods': '2000',
+  'TotalAppleVarieties_1': 461},
+ {'FruitFarmingRegions': 'Total Netherlands',
+  'Periods': '2010',
+  'TotalAppleVarieties_1': 334},
+ {'FruitFarmingRegions': 'Region North',
+  'Periods': '2000',
+  'TotalAppleVarieties_1': 87},
+ {'FruitFarmingRegions': 'Region North',
+  'Periods': '2010',
+  'TotalAppleVarieties_1': 49},
  # ...
 ]
 ```
 
-As another example, the code below downloads the number of inhabitants in the Dutch municipalities - 
+As another example, the code below downloads the number of inhabitants in the Dutch municipalities -
 ignoring all other characteristics and data on neighbourhood level.
 
 ``` python
