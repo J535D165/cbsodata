@@ -184,3 +184,16 @@ def test_get_data_derden(table_id):
 
     for key in data_option1[0].keys():
         assert data_option1[0][key] == data_option2[0][key] == data_option3[0][key]
+
+
+@pytest.mark.parametrize("table_id", datasets)
+def test_typed_parameter(table_id, tmpdir):
+    # Test with typed=True
+    data_typed = cbsodata.download_data(table_id, dir=tmpdir, typed=True)
+    assert "TypedDataSet" in data_typed.keys()
+    assert "UntypedDataSet" not in data_typed.keys()
+
+    # Test with typed=False
+    data_untyped = cbsodata.download_data(table_id, dir=tmpdir, typed=False)
+    assert "UntypedDataSet" in data_untyped.keys()
+    assert "TypedDataSet" not in data_untyped.keys()

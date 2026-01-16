@@ -246,7 +246,7 @@ def _select(select):
 def download_data(
     table_id,
     dir=None,
-    typed=False,
+    typed=True,
     select=None,
     filters=None,
     catalog_url=None,
@@ -262,7 +262,7 @@ def download_data(
         Folder to save data to. If not given, data is not stored on
         disk.
     typed : bool
-        Return a typed data table. Default False.
+        Return a typed data table. Default True.
     select : str, list
         Column label or list of column labels to return.
     filters : str
@@ -290,8 +290,9 @@ def download_data(
     metadata_table_names = [table["name"] for table in metadata_tables]
 
     # Download only the typed or untyped data
-    typed_or_not_str = "TypedDataSet" if typed else "UntypedDataSet"
-    metadata_table_names.remove(typed_or_not_str)
+    remove_str = "UntypedDataSet" if typed else "TypedDataSet"
+    if remove_str in metadata_table_names:
+        metadata_table_names.remove(remove_str)
 
     data = {}
 
@@ -442,7 +443,7 @@ def get_meta(table_id, name, catalog_url=None, **kwargs):
 def get_data(
     table_id,
     dir=None,
-    typed=False,
+    typed=True,
     select=None,
     filters=None,
     catalog_url=None,
@@ -458,7 +459,7 @@ def get_data(
         Folder to save data to. If not given, data is not stored
             on disk.
     typed : bool
-        Return a typed data table. Default False.
+        Return a typed data table. Default True.
     select : list
         Column label or list of column labels to return.
     filters : str
